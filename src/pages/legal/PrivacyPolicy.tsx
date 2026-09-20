@@ -527,7 +527,7 @@ export default function PrivacyPolicy() {
                     </div>
                     <div>
                       <span className="text-slate-400 block text-xs">Operations Office:</span>
-                      <span>Bandra Kurla Complex (BKC), Mumbai, Maharashtra 400051, India</span>
+                      <span>Corporate Governance &amp; Cloud Operations Support Desk, India</span>
                     </div>
                   </div>
                   <p className="text-xs text-slate-400 pt-2 border-t border-white/10">

@@ -338,12 +338,12 @@ Vote India Secure · Mumbai, India · support@shareholdervoting.in`;
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:14px 18px;">
                 <tr>
                   <td style="color:#fbbf24;font-size:12px;font-weight:700;padding-bottom:4px;">
-                    ⚠️ MCA Rule 20 &amp; Statutory Ballot Secrecy:
+                    ⚠️ MCA Rule 20 &amp; Statutory Ballot Integrity:
                   </td>
                 </tr>
                 <tr>
                   <td style="color:#cbd5e1;font-size:11.5px;line-height:1.5;">
-                    Your vote is sealed using AES-256 encryption. Under Rule 20(4)(xii) of the Companies Act 2013, once a vote is cast remotely, it cannot be modified or re-cast at the general meeting.
+                    Your vote is secured using SHA-256 tamper-evident hashing and PostgreSQL Row Level Security. Under Rule 20(4)(xii) of the Companies Act 2013, once a vote is cast remotely, it cannot be modified or re-cast at the general meeting.
                   </td>
                 </tr>
               </table>
@@ -357,7 +357,7 @@ Vote India Secure · Mumbai, India · support@shareholdervoting.in`;
               
               <!-- Security Badges -->
               <p style="color:#38bdf8;font-size:11px;font-weight:700;margin:0 0 8px;letter-spacing:1px;">
-                🔒 256-BIT ENCRYPTED · DPDP ACT 2023 COMPLIANT · CERT-IN ALIGNED
+                🔒 SHA-256 TAMPER-EVIDENT · DPDP ACT 2023 ALIGNED · SECURE CORPORATE GOVERNANCE
               </p>
               
               <p style="color:#64748b;font-size:11px;line-height:1.6;margin:0 0 12px;">

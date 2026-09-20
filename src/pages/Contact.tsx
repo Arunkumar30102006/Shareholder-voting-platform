@@ -33,10 +33,6 @@ const contactPageSchema = {
     "email": ["support@shareholdervoting.in", "admin@shareholdervoting.in"],
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Bandra Kurla Complex (BKC)",
-      "addressLocality": "Mumbai",
-      "addressRegion": "Maharashtra",
-      "postalCode": "400051",
       "addressCountry": "IN"
     },
     "contactPoint": [
@@ -316,20 +312,12 @@ const Contact = () => {
                   <Building2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-sm">Office Address</h3>
-                  <a
-                    href="https://maps.google.com/?q=Bandra+Kurla+Complex+BKC+Mumbai+Maharashtra+400051+India"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-slate-200 text-xs mt-1 leading-relaxed font-normal hover:text-cyan-300 transition-colors block"
-                  >
-                    Vote Secure<br/>
-                    Bandra Kurla Complex (BKC)<br/>
-                    Mumbai, Maharashtra 400051, India
-                    <span className="inline-flex items-center gap-1 text-cyan-400 text-[10px] font-bold mt-1 ml-1">
-                      <MapPin className="w-3 h-3" /> View on Map
-                    </span>
-                  </a>
+                  <h3 className="font-bold text-white text-sm">Operations Support</h3>
+                  <div className="text-slate-200 text-xs mt-1 leading-relaxed font-normal">
+                    Vote India Secure<br/>
+                    Corporate Governance &amp; Cloud Operations Support Desk<br/>
+                    Republic of India
+                  </div>
                 </div>
               </div>
 

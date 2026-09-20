@@ -2,6 +2,8 @@ export const SITE_URL = 'https://www.shareholdervoting.in';
 
 /**
  * 1. Organization Schema (Single Source of Truth)
+ * Strictly factual data only: verified identity, contact point, URL, and logo.
+ * No fabricated postal addresses, social profiles, or affiliations.
  */
 export const organizationSchema = {
   '@context': 'https://schema.org',
@@ -12,7 +14,7 @@ export const organizationSchema = {
   url: `${SITE_URL}/`,
   logo: `${SITE_URL}/logo-48.webp`,
   image: `${SITE_URL}/og-image.jpg`,
-  description: 'Secure electronic voting and corporate governance platform for shareholder general meetings, AGMs, EGMs, and resolutions.',
+  description: 'Secure electronic voting and corporate governance software for shareholder general meetings, AGMs, EGMs, and resolutions.',
   sameAs: [],
   contactPoint: {
     '@type': 'ContactPoint',
@@ -20,12 +22,6 @@ export const organizationSchema = {
     contactType: 'customer support',
     areaServed: 'IN',
     availableLanguage: 'en',
-  },
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Mumbai',
-    addressRegion: 'Maharashtra',
-    addressCountry: 'IN',
   },
 };
 
@@ -47,7 +43,7 @@ export const webSiteSchema = {
     '@type': 'SearchAction',
     target: {
       '@type': 'EntryPoint',
-      urlTemplate: `${SITE_URL}/blog?q={search_term_string}`,
+      urlTemplate: `${SITE_URL}/resources?q={search_term_string}`,
     },
     'query-input': 'required name=search_term_string',
   },
@@ -56,6 +52,8 @@ export const webSiteSchema = {
 
 /**
  * 3. SoftwareApplication Schema
+ * Evidence-backed features only.
+ * Omit fabricated pricing since pricing is customized/quote-based per corporate event.
  */
 export const softwareAppSchema = {
   '@context': 'https://schema.org',
@@ -64,21 +62,15 @@ export const softwareAppSchema = {
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web, iOS, Android',
   url: SITE_URL,
-  description: 'Secure online shareholder voting platform for AGMs, EGMs and corporate resolutions with audit trails, real-time results and enterprise-grade security.',
-  offers: {
-    '@type': 'Offer',
-    priceCurrency: 'INR',
-    priceRange: '₹15,000 – ₹45,000 per session',
-    availability: 'https://schema.org/InStock',
-  },
+  description: 'Secure corporate voting software for AGMs, EGMs and corporate resolutions with cryptographic audit trails and independent scrutinizer reporting.',
   featureList: [
-    'AES-256 ballot encryption',
-    'SHA-256 Merkle audit trail',
-    'SEBI LODR Regulation 44 aligned',
-    'Companies Act 2013 Section 108 aligned',
-    'Form MGT-13 scrutinizer reporting',
-    '2-Factor OTP authentication',
-    'Real-time quorum analytics',
+    'SHA-256 cryptographic ballot integrity',
+    'Verifiable Merkle audit trail',
+    'PostgreSQL Row-Level Security',
+    'Companies Act 2013 Section 108 workflow mapping',
+    'Form MGT-13 aligned scrutinizer reporting',
+    'Secure OTP shareholder authentication',
+    'Real-time quorum progression monitoring',
     'Progressive Web App',
   ],
 };
@@ -95,21 +87,15 @@ export const homepageSoftwareOrgGraphSchema = {
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web, iOS, Android',
       url: SITE_URL,
-      description: 'Secure online shareholder voting platform for AGMs, EGMs and corporate resolutions with audit trails, real-time results and enterprise-grade security.',
-      offers: {
-        '@type': 'Offer',
-        priceCurrency: 'INR',
-        priceRange: '₹15,000 – ₹45,000 per session',
-        availability: 'https://schema.org/InStock',
-      },
+      description: 'Secure corporate voting software for AGMs, EGMs and corporate resolutions with cryptographic audit trails and independent scrutinizer reporting.',
       featureList: [
-        'AES-256 ballot encryption',
-        'SHA-256 Merkle audit trail',
-        'SEBI LODR Regulation 44 aligned',
-        'Companies Act 2013 Section 108 aligned',
-        'Form MGT-13 scrutinizer reporting',
-        '2-Factor OTP authentication',
-        'Real-time quorum analytics',
+        'SHA-256 cryptographic ballot integrity',
+        'Verifiable Merkle audit trail',
+        'PostgreSQL Row-Level Security',
+        'Companies Act 2013 Section 108 workflow mapping',
+        'Form MGT-13 aligned scrutinizer reporting',
+        'Secure OTP shareholder authentication',
+        'Real-time quorum progression monitoring',
         'Progressive Web App',
       ],
     },
@@ -125,13 +111,6 @@ export const homepageSoftwareOrgGraphSchema = {
         areaServed: 'IN',
         availableLanguage: 'en',
       },
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Mumbai',
-        addressRegion: 'Maharashtra',
-        addressCountry: 'IN',
-      },
-      sameAs: [],
     },
   ],
 };

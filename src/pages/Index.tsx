@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState } from "react";
 import { SEO } from "@/components/layout/SEO";
 import { 
   organizationSchema, 
@@ -12,120 +12,114 @@ import {
   ShieldCheck, Lock, Building2, FileCheck2,
   UploadCloud, Smartphone, HelpCircle, ChevronDown, 
   Sparkles, ArrowRight, Play, Check, Shield,
-  Users, BarChart3, Globe, Award, CheckCircle2,
-  Zap, FileText, ArrowUpRight
+  Users, BarChart3, Globe, CheckCircle2,
+  FileText, ArrowUpRight, BookOpen, Scale,
+  KeyRound, Layers
 } from "lucide-react";
 
 import StatsSection from "@/components/home/StatsSection";
 import TrustBadgesRow from "@/components/home/TrustBadgesRow";
-import SecurityComplianceSection from "@/components/home/SecurityComplianceSection";
 import HeroCyberOrb from "@/components/home/HeroCyberOrb";
 
 const faqItems = [
   {
-    question: "Is Vote India Secure compliant with corporate governance and statutory e-voting requirements?",
-    answer: "Yes. The platform is designed in alignment with Section 108 of the Companies Act 2013, Rule 20 of the Companies (Management and Administration) Rules 2014, and SEBI LODR Regulation 44, featuring weighted voting calculations, cryptographic ballot integrity, and independent scrutinizer access."
+    question: "How does Vote India Secure support corporate governance requirements?",
+    answer: "The platform's technical architecture is mapped to Section 108 of the Companies Act 2013, Rule 20 of the Companies (Management and Administration) Rules 2014, and SEBI LODR Regulation 44. Features include automated weighted voting calculations, cut-off date entitlement validation, and independent scrutinizer unblocking."
   },
   {
-    question: "How does online shareholder voting work during an AGM or EGM?",
-    answer: "Companies configure their general meeting resolutions and upload shareholder roster records. Shareholders receive secure access credentials via email or SMS, authenticate via 2-Factor OTP verification, and cast weighted ballots corresponding to their shareholding. Results and cryptographic receipts are generated in real-time."
+    question: "How does online shareholder authentication work?",
+    answer: "Shareholders authenticate using their registered Demat credentials (DP ID and Client ID for CDSL/NSDL accounts) or Registered Folio Number paired with registered PAN details, followed by a secure 6-digit keyed OTP dispatched to their registered email or phone."
   },
   {
-    question: "What types of organizations can use this platform?",
-    answer: "Any publicly listed corporation, unlisted enterprise, cooperative, investment fund, or Registrar and Transfer Agent (RTA) conducting shareholder ballots, proxy votes, or board elections can use the platform."
+    question: "What types of general meetings are supported?",
+    answer: "The platform provides dedicated workflows for Annual General Meetings (AGM), Extraordinary General Meetings (EGM) requisitioned under Section 100 or Board convened, Postal Ballots under Section 110, and Board/Committee elections."
   },
   {
-    question: "How does Vote India Secure guarantee ballot security and secrecy?",
-    answer: "Vote India Secure enforces AES-256 encryption at rest and TLS 1.3 in transit. Every vote is cryptographically sealed with SHA-256 hashing and recorded to a verifiable Merkle audit ledger, ensuring individual voter selections remain decoupled and cannot be modified prior to official Scrutinizer unblocking."
+    question: "How is ballot secrecy and integrity maintained?",
+    answer: "Under Rule 20(4)(xii), individual voter ballot selections remain sealed and decoupled from the active voter registry. Each cast ballot generates a SHA-256 cryptographic hash anchored into a verifiable Merkle Tree audit trail. Scrutinizers unblock consolidated results only after the close of voting in the presence of at least two independent witnesses."
   },
   {
-    question: "Can shareholders vote from their mobile devices?",
-    answer: "Yes. Vote India Secure is a responsive Progressive Web App (PWA) that functions smoothly on smartphones, tablets, and desktop browsers without requiring third-party plugins or certificate installations."
+    question: "Can shareholders vote using smartphones or tablets?",
+    answer: "Yes. Vote India Secure is built as a responsive Progressive Web App (PWA) compatible with all modern mobile, tablet, and desktop web browsers without requiring third-party software downloads or security certificate installations."
   }
 ];
 
 const audienceCards = [
   {
     title: "For Shareholders",
-    subtitle: "Accessible Worldwide",
+    subtitle: "Equity & Institutional",
     icon: Users,
     color: "from-blue-500/20 to-cyan-500/20",
     border: "border-blue-500/40",
     badgeColor: "bg-blue-500/20 text-blue-300 border-blue-400/30",
-    link: "/shareholder-login",
-    linkText: "Shareholder Portal",
+    link: "/shareholder-e-voting",
+    linkText: "Shareholder E-Voting Guide",
     points: [
-      "Instant 2-Factor OTP & biometric authentication",
-      "Vote from any smartphone, tablet, or desktop browser worldwide",
-      "Cryptographic vote confirmation receipt with verifiable QR",
-      "AI-powered resolution summaries and annual report briefings"
+      "Secure credential authentication paired with keyed OTP",
+      "Instant access on smartphones, tablets, and desktop browsers",
+      "Cryptographic vote confirmation receipt with SHA-256 digest",
+      "Clear resolution explanatory statements and agenda review"
     ]
   },
   {
-    title: "For Enterprises & RTAs",
-    subtitle: "Global Governance Hub",
+    title: "For Corporate Issuers & RTAs",
+    subtitle: "Company Secretaries & Boards",
     icon: Building2,
     color: "from-amber-500/20 to-orange-500/20",
     border: "border-amber-500/40",
     badgeColor: "bg-amber-500/20 text-amber-300 border-amber-400/30",
     link: "/company-register",
-    linkText: "Register Organization",
+    linkText: "Register Your Organization",
     points: [
-      "Import global shareholder registries and depository records",
-      "Configure ordinary, special, and multi-class share resolutions",
-      "Live real-time quorum progression and investor analytics",
-      "Full compliance with international corporate governance laws"
+      "Structured AGM, EGM, and Postal Ballot configuration",
+      "Automated roster ingestion with record-date share balance lock",
+      "Real-time quorum progression tracking without unblocking votes",
+      "Section 105 proxy deposit tracking and Form MGT-11 management"
     ]
   },
   {
-    title: "For Scrutinizers & Auditors",
-    subtitle: "Independent Verification",
+    title: "For Independent Scrutinizers",
+    subtitle: "Legal & Audit Compliance",
     icon: ShieldCheck,
     color: "from-emerald-500/20 to-teal-500/20",
     border: "border-emerald-500/40",
     badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-400/30",
-    link: "/live-demo",
-    linkText: "View Auditor Demo",
+    link: "/scrutinizer-tools",
+    linkText: "Scrutinizer Audit Tools",
     points: [
-      "Digital key unblocking with multi-witness authentication",
-      "Automated official scrutinizer audit reports in 1-click",
-      "Instant data export for stock exchange and regulatory filings",
-      "Immutable Merkle tree audit trail verification"
+      "Rule 20(4)(xii) dual-witness digital unblocking protocol",
+      "Consolidated vote exports formatted in alignment with Form MGT-13",
+      "Cryptographic Merkle tree audit trail verification",
+      "Independent tabulation verification for Ordinary and Special business"
     ]
   }
 ];
 
-const comparisonPoints = [
-  { 
-    feature: "Universal Mobile UX", 
-    category: "User Experience", 
-    us: "Seamless PWA on any smartphone with 2-tap biometric voting", 
-    them: "Outdated legacy web portals designed decades ago" 
+const featuredResources = [
+  {
+    title: "What is Shareholder E-Voting? Statutory Guide",
+    desc: "Comprehensive primer on electronic voting under Companies Act Section 108: legal mandate, physical vs remote comparison, and benefits.",
+    href: "/resources/what-is-shareholder-e-voting",
+    tag: "Statutory Primer"
   },
-  { 
-    feature: "Authentication Speed", 
-    category: "Security & Access", 
-    us: "Instant multi-channel OTP verification (<10s)", 
-    them: "Slow postal mail or complex hardware tokens" 
+  {
+    title: "How AGM E-Voting Works Under Section 108",
+    desc: "Detailed operational timeline for Annual General Meetings: 21 clear days notice, remote voting window, venue balloting, and quorum.",
+    href: "/resources/how-agm-e-voting-works",
+    tag: "AGM Operations"
   },
-  { 
-    feature: "Live Quorum & Analytics", 
-    category: "Boardroom Intelligence", 
-    us: "Real-time visual charts & global participation metrics", 
-    them: "Static spreadsheets compiled hours after meetings" 
+  {
+    title: "How EGM E-Voting Works Under Section 100",
+    desc: "Statutory procedure for Extraordinary General Meetings: Board requisitions, member requisitions under Section 100, and short notice provisions.",
+    href: "/resources/how-egm-e-voting-works",
+    tag: "EGM Requisition"
   },
-  { 
-    feature: "Audit Report Generation", 
-    category: "Compliance & Legal", 
-    us: "1-Click automated statutory scrutinizer reports", 
-    them: "Manual calculation prone to tabulation errors" 
-  },
-  { 
-    feature: "AI Document Summarizer", 
-    category: "AI Governance", 
-    us: "Instant bullet-point executive summaries & resolution analysis", 
-    them: "Not available (hundreds of dense PDF pages)" 
-  },
+  {
+    title: "How Corporate Proxy Voting Works Under Section 105",
+    desc: "Legal rights and technical mechanisms of proxy voting under Section 105: Form MGT-11 appointment and entitlement limits.",
+    href: "/resources/how-proxy-voting-works",
+    tag: "Proxy Voting"
+  }
 ];
 
 const Index = () => {
@@ -134,47 +128,45 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-[#020817] text-white selection:bg-blue-500/30">
       <SEO
-        title="Vote India Secure | Secure Shareholder E-Voting Platform"
-        description="Secure online shareholder voting platform for AGMs, EGMs and corporate resolutions with audit trails, real-time results and enterprise-grade security."
+        title="Shareholder E-Voting Platform for AGMs & EGMs | Vote India Secure"
+        description="Secure corporate voting software for Annual General Meetings (AGM), EGMs, and postal ballots with cryptographic ballot integrity and independent scrutinizer reporting."
         canonical="/"
-        keywords="shareholder e-voting platform India, online AGM voting software, SEBI LODR e-voting, Companies Act Section 108 voting, electronic voting platform India, remote e-voting solution, AGM EGM voting software"
         schemas={[organizationSchema, webSiteSchema, homepageSoftwareOrgGraphSchema, createFaqSchema(faqItems)]}
       />
 
-      {/* ─── 1. HERO SECTION ─── */}
-      <section className="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden" aria-label="Hero section">
-        {/* GPU-Accelerated Dynamic Cyber Lighting Visual */}
+      {/* ─── 1. HERO SECTION & PLATFORM OVERVIEW ─── */}
+      <section className="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden" aria-label="Platform overview">
         <HeroCyberOrb />
 
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center max-w-4xl mx-auto">
             
-            {/* Top Regulatory Badge */}
+            {/* Regulatory Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-white text-xs md:text-sm font-semibold mb-8 shadow-md backdrop-blur-md">
               <Globe className="w-4 h-4 text-cyan-400" />
-              <span className="text-slate-100">Enterprise Governance Standards · AES-256 Bit Encryption</span>
+              <span className="text-slate-100">Corporate Governance · Cryptographic Audit Ledger</span>
             </div>
 
-            {/* Main Headline (LCP Candidate - Instant Rendering) */}
+            {/* Main Primary H1 */}
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-[1.1]">
-              Online Shareholder{" "}
+              Shareholder E-Voting{" "}
               <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-300 bg-clip-text text-transparent drop-shadow-sm">
-                Voting Platform for AGMs &amp; EGMs
+                Platform for Companies
               </span>
             </h1>
 
-            {/* Concise Subtitle with High Contrast */}
+            {/* Subtitle */}
             <p className="text-base sm:text-lg md:text-xl text-slate-100 max-w-2xl mx-auto mb-8 font-normal leading-relaxed">
-              Purpose-built electronic voting software for global public corporations, private enterprises, and transfer agents. Conduct secure AGMs, EGMs, and proxy ballots with real-time auditability.
+              Secure corporate voting software for Annual General Meetings (AGM), EGMs, postal ballots, and board elections. Engineered with weighted voting power, cryptographic ballot integrity, and independent scrutinizer audit reporting.
             </p>
 
             {/* Quick Feature Pills */}
             <div className="flex flex-wrap justify-center gap-2.5 mb-10 max-w-2xl mx-auto">
               {[
-                "🔒 AES-256 Bit Encryption",
-                "⚡ Instant Quorum Tallying",
-                "📜 Automated Audit Reports",
-                "📱 Universal Mobile PWA"
+                "🔒 SHA-256 Ballot Sealing",
+                "⚡ Real-Time Quorum Progression",
+                "📜 Scrutinizer Audit Reports",
+                "📱 Universal Mobile Access"
               ].map((feat, i) => (
                 <span key={i} className="px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-slate-100 shadow-sm">
                   {feat}
@@ -184,14 +176,14 @@ const Index = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link to="/live-demo">
+              <Link to="/live-demo" id="hero-live-demo-cta">
                 <Button size="xl" className="w-full sm:w-auto bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold gap-2 text-base px-8 py-6 rounded-xl shadow-lg shadow-blue-900/40 border border-blue-400/30">
                   <Play className="w-4 h-4 fill-white" />
                   Explore Live Interactive Demo
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               </Link>
-              <Link to="/company-register">
+              <Link to="/company-register" id="hero-register-cta">
                 <Button variant="outline" size="xl" className="w-full sm:w-auto text-base px-8 py-6 rounded-xl border-white/25 hover:bg-white/10 text-white font-semibold gap-2 shadow-sm">
                   Register Your Organization
                   <ArrowUpRight className="w-4 h-4" />
@@ -203,23 +195,23 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ─── 2. TRUST PILLS & METRICS ─── */}
+      {/* ─── 2. TRUST BADGES & VERIFIED METRICS ─── */}
       <TrustBadgesRow />
       <StatsSection />
 
-      {/* ─── 3. AUDIENCE PERSONAS (Shareholders, Enterprises, Scrutinizers) ─── */}
-      <section className="py-20 relative overflow-hidden" aria-label="Platform users">
+      {/* ─── 3. WHO WE SERVE (Audience Personas) ─── */}
+      <section className="py-20 relative overflow-hidden" aria-label="Platform participants">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center max-w-3xl mx-auto mb-14">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-slate-200 text-xs font-bold uppercase tracking-wider mb-4">
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              Tailored For Global Stakeholders
+              Tailored For Every Corporate Stakeholder
             </div>
             <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4">
-              A Unified Portal for <span className="text-blue-400">All Participants</span>
+              Purpose-Built for <span className="text-blue-400">All Participants</span>
             </h2>
             <p className="text-slate-200 text-base md:text-lg font-normal">
-              Engineered to meet the international legal, analytical, and operational requirements of corporate voting.
+              Structured workflows configured to meet the statutory, analytical, and operational needs of shareholders, issuers, and independent scrutinizers.
             </p>
           </div>
 
@@ -227,8 +219,7 @@ const Index = () => {
             {audienceCards.map((card, index) => (
               <div
                 key={card.title}
-                className={`p-7 rounded-3xl bg-[#0d1b2a]/80 border ${card.border} backdrop-blur-xl flex flex-col justify-between hover:translate-y-[-4px] transition-all duration-300 shadow-xl group animate-fade-in-up`}
-                style={{ animationDelay: `${index * 100}ms` }}
+                className={`p-7 rounded-3xl bg-[#0d1b2a]/80 border ${card.border} backdrop-blur-xl flex flex-col justify-between hover:translate-y-[-4px] transition-all duration-300 shadow-xl group`}
               >
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-5">
@@ -264,146 +255,420 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ─── 4. BENTO GRID FEATURES ─── */}
-      <section className="py-20 relative overflow-hidden bg-white/[0.02] border-y border-white/10" aria-label="Enterprise features">
+      {/* ─── 4. AGM VOTING ARCHITECTURE ─── */}
+      <section className="py-20 bg-white/[0.02] border-y border-white/10" aria-label="AGM voting solutions">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-bold uppercase tracking-wider mb-4">
+                <Building2 className="w-3.5 h-3.5" />
+                Annual General Meetings
+              </div>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-5 leading-tight">
+                Annual General Meeting (AGM) <span className="text-blue-400">E-Voting Solutions</span>
+              </h2>
+              <p className="text-slate-200 text-sm md:text-base leading-relaxed mb-6 font-normal">
+                Conduct statutory AGMs with automated support for 21-day notice dispatches, remote pre-meeting voting windows, and live venue balloting. Handle standard Ordinary Business (financial statement adoption, dividend declarations, director reappointments) and Special Business resolutions seamlessly.
+              </p>
+              <ul className="space-y-3 mb-8 text-sm text-slate-200">
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Configurable remote e-voting window closing at 5:00 PM on the day preceding the AGM</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Automatic record-date shareholding snapshot matching depository records</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Separate categorization of Ordinary and Special resolutions with statutory thresholds</span>
+                </li>
+              </ul>
+              <Link to="/agm-voting" id="agm-explore-link">
+                <Button className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-semibold gap-2 rounded-xl">
+                  Explore AGM E-Voting Platform <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+            <div className="p-8 rounded-3xl bg-[#0d1b2a]/90 border border-white/15 backdrop-blur-xl shadow-2xl space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-sm">AGM Statutory Resolution Types</h3>
+                    <p className="text-xs text-slate-400">Section 102 &amp; Section 108 Workflows</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono px-2.5 py-1 rounded bg-blue-500/20 text-blue-300 border border-blue-400/30">Ordinary &amp; Special</span>
+              </div>
+              <div className="space-y-3 text-xs text-slate-200">
+                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10">
+                  <p className="font-semibold text-white mb-1">Ordinary Business</p>
+                  <p className="text-slate-300">Financial statements, auditor appointment, director rotations, and dividend approvals. Simple majority required (&gt;50%).</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10">
+                  <p className="font-semibold text-white mb-1">Special Business</p>
+                  <p className="text-slate-300">Capital restructuring, M&amp;A approvals, and Articles of Association amendments. Supermajority required (≥75%).</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 5. EGM VOTING PLATFORM ─── */}
+      <section className="py-20" aria-label="EGM voting solutions">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="order-2 lg:order-1 p-8 rounded-3xl bg-[#0d1b2a]/90 border border-white/15 backdrop-blur-xl shadow-2xl space-y-5">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center">
+                    <Scale className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-sm">EGM Requisition Workflows</h3>
+                    <p className="text-xs text-slate-400">Section 100 Statutory Mechanics</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">Section 100</span>
+              </div>
+              <div className="space-y-3 text-xs text-slate-200">
+                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10">
+                  <p className="font-semibold text-white mb-1">Board-Convened EGMs</p>
+                  <p className="text-slate-300">Urgent matters requiring immediate shareholder determination outside the scheduled AGM cycle.</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10">
+                  <p className="font-semibold text-white mb-1">Shareholder Requisitions</p>
+                  <p className="text-slate-300">Convened upon requisition of members holding ≥10% of paid-up equity voting capital.</p>
+                </div>
+              </div>
+            </div>
+            <div className="order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/20 text-amber-300 text-xs font-bold uppercase tracking-wider mb-4">
+                <Scale className="w-3.5 h-3.5" />
+                Extraordinary General Meetings
+              </div>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-5 leading-tight">
+                Extraordinary General Meeting (EGM) <span className="text-amber-400">Balloting</span>
+              </h2>
+              <p className="text-slate-200 text-sm md:text-base leading-relaxed mb-6 font-normal">
+                Deploy rapid, legally grounded electronic voting infrastructure for urgent corporate determinations. Whether convened by the Board or requisitioned by eligible shareholders under Section 100, the platform enforces statutory notice periods and precision weighted calculations.
+              </p>
+              <ul className="space-y-3 mb-8 text-sm text-slate-200">
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Support for standard 21-day notice or Section 101(1) 95% majority short notice</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Automated eligibility filtering tied to the official EGM cut-off record date</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Independent unblocking and scrutiny identical to statutory AGM standards</span>
+                </li>
+              </ul>
+              <Link to="/egm-voting" id="egm-explore-link">
+                <Button className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-semibold gap-2 rounded-xl">
+                  Explore EGM E-Voting Platform <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 6. PROXY VOTING & SECTION 105 MANAGEMENT ─── */}
+      <section className="py-20 bg-white/[0.02] border-y border-white/10" aria-label="Corporate proxy voting">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-4">
+                <FileCheck2 className="w-3.5 h-3.5" />
+                Proxy Governance
+              </div>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-5 leading-tight">
+                Corporate Proxy Voting &amp; <span className="text-cyan-400">Section 105 Management</span>
+              </h2>
+              <p className="text-slate-200 text-sm md:text-base leading-relaxed mb-6 font-normal">
+                Manage proxy appointments digitally in alignment with Section 105 of the Companies Act 2013 and Form MGT-11 standards. Eliminate manual physical proxy reconciliation errors, enforce the 48-hour statutory deposit cutoff, and prevent double voting automatically.
+              </p>
+              <ul className="space-y-3 mb-8 text-sm text-slate-200">
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Automated tracking of the statutory 48-hour pre-meeting proxy deposit window</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Enforcement of Rule 19 statutory cap (maximum 50 members and 10% voting capital)</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Double-voting prevention: remote shareholder ballots supersede proxy authorizations</span>
+                </li>
+              </ul>
+              <Link to="/proxy-voting" id="proxy-explore-link">
+                <Button className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-semibold gap-2 rounded-xl">
+                  Explore Proxy Voting Solutions <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+            <div className="p-8 rounded-3xl bg-[#0d1b2a]/90 border border-white/15 backdrop-blur-xl shadow-2xl space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center">
+                <FileCheck2 className="w-6 h-6 text-cyan-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white">Form MGT-11 Alignment</h3>
+              <p className="text-sm text-slate-300 leading-relaxed font-normal">
+                The platform records appointed proxy details against member folios, validates depository signatures, and generates consolidated appointment schedules for the Chairman and Scrutinizer.
+              </p>
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-slate-400">
+                <p className="font-semibold text-white mb-1">Key Statutory Principle</p>
+                <p>A proxy has no right to speak at a general meeting and cannot vote on a show of hands, but is entitled to cast ballots where authorized by the appointing member.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 7. SCRUTINIZER AUDIT & REPORTING WORKFLOW ─── */}
+      <section className="py-20" aria-label="Scrutinizer tools">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="order-2 lg:order-1 p-8 rounded-3xl bg-[#0d1b2a]/90 border border-white/15 backdrop-blur-xl shadow-2xl space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center">
+                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-sm">Rule 20(4)(xii) Protocol</h3>
+                    <p className="text-xs text-slate-400">Independent Unblocking System</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">Dual-Witness</span>
+              </div>
+              <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
+                <p>Votes cast through remote e-voting cannot be accessed or tallied by management or the board during the voting window. Under Rule 20(4)(xii), votes remain cryptographically sealed until unblocked by the appointed Scrutinizer in the presence of at least two witnesses not in company employment.</p>
+                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10">
+                  <p className="font-semibold text-white mb-1">Form MGT-13 Aligned Export</p>
+                  <p className="text-slate-400">Consolidated reports tabulating votes cast in favor, votes cast against, and invalid ballots across Ordinary and Special resolutions.</p>
+                </div>
+              </div>
+            </div>
+            <div className="order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-4">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Scrutinizer Tools
+              </div>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-5 leading-tight">
+                Independent Scrutinizer Audit &amp; <span className="text-emerald-400">Reporting Portal</span>
+              </h2>
+              <p className="text-slate-200 text-sm md:text-base leading-relaxed mb-6 font-normal">
+                Equip practicing Company Secretaries, Chartered Accountants, and independent scrutinizers with purpose-built tools to verify ballot integrity, maintain statutory registers, and export scrutinizer reports aligned with Form MGT-13 within 48 hours of meeting conclusion.
+              </p>
+              <ul className="space-y-3 mb-8 text-sm text-slate-200">
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Dual-witness authentication protocol required for unblocking results</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Cryptographic Merkle tree verification of ballot submission logs</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Automated reconciliation of remote e-voting and venue polling ballots</span>
+                </li>
+              </ul>
+              <Link to="/scrutinizer-tools" id="scrutinizer-explore-link">
+                <Button className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-semibold gap-2 rounded-xl">
+                  View Scrutinizer Portal Capabilities <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 8. SECURITY ARCHITECTURE & CRYPTOGRAPHIC INTEGRITY ─── */}
+      <section className="py-20 bg-white/[0.02] border-y border-white/10" aria-label="Security architecture">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center max-w-3xl mx-auto mb-14">
             <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4">
-              Enterprise Governance <span className="text-blue-400">Capabilities</span>
+              Transparent Security <span className="text-blue-400">Architecture</span>
             </h2>
             <p className="text-slate-200 text-base md:text-lg font-normal">
-              Everything corporate governance and legal teams need to conduct transparent, tamper-evident electronic voting.
+              A layered technical security model designed to preserve secret ballots, prevent post-cutoff tampering, and maintain immutable auditability.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            
-            {/* Bento 1: Cryptographic Integrity */}
-            <div className="md:col-span-2 p-8 rounded-3xl bg-[#0d1b2a]/80 border border-white/15 backdrop-blur-xl relative group hover:border-blue-500/50 transition-all duration-300">
+            <div className="p-8 rounded-3xl bg-[#0d1b2a]/80 border border-white/15 backdrop-blur-xl">
               <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mb-6">
                 <Lock className="w-6 h-6 text-blue-400" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Cryptographic SHA-256 Ballot Sealing</h3>
-              <p className="text-slate-100 text-sm md:text-base leading-relaxed mb-6 font-normal">
-                Every cast ballot produces a SHA-256 cryptographic hash chained into a verifiable Merkle Tree. Under Rule 20(4)(xii), individual voter choices remain decoupled and sealed until official unblocking by the Scrutinizer.
+              <h3 className="text-xl font-bold text-white mb-3">SHA-256 Ballot Sealing</h3>
+              <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                Each cast vote generates a deterministic SHA-256 cryptographic digest that is chained into a session-level Merkle Tree. Any modification to a recorded ballot invalidates the root digest.
               </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-slate-100 font-semibold">
-                <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-blue-400" /> SHA-256 Hashing
-                </div>
-                <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-cyan-400" /> Granular RLS Access
-                </div>
-                <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-emerald-400" /> Merkle Audit Proof
-                </div>
-              </div>
             </div>
 
-            {/* Bento 2: Scrutinizer Hub */}
-            <div className="p-8 rounded-3xl bg-[#0d1b2a]/80 border border-white/15 backdrop-blur-xl group hover:border-cyan-500/50 transition-all duration-300 flex flex-col justify-between">
-              <div>
-                <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center mb-6">
-                  <FileCheck2 className="w-6 h-6 text-cyan-400" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-3">Scrutinizer Audit Portal</h3>
-                <p className="text-slate-200 text-sm leading-relaxed mb-4 font-normal">
-                  Automated vote consolidation and Form MGT-13 style report generation to assist the Scrutinizer and Company Secretary with statutory filings.
-                </p>
+            <div className="p-8 rounded-3xl bg-[#0d1b2a]/80 border border-white/15 backdrop-blur-xl">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center mb-6">
+                <Shield className="w-6 h-6 text-cyan-400" />
               </div>
-              <Link to="/compliance" className="text-xs font-bold text-cyan-300 flex items-center gap-1 hover:underline">
-                View Statutory Standards <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            {/* Bento 3: Mobile Accessibility */}
-            <div className="p-8 rounded-3xl bg-[#0d1b2a]/80 border border-white/15 backdrop-blur-xl group hover:border-amber-500/50 transition-all duration-300 flex flex-col justify-between">
-              <div>
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mb-6">
-                  <Smartphone className="w-6 h-6 text-amber-400" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-3">Universal Mobile Voting</h3>
-                <p className="text-slate-200 text-sm leading-relaxed mb-4 font-normal">
-                  Shareholders vote from any phone or browser via 2-factor verification without installing third-party certificates or bulky applications.
-                </p>
-              </div>
-              <span className="text-xs font-bold text-amber-300 flex items-center gap-1">
-                Designed for High Shareholder Turnout
-              </span>
-            </div>
-
-            {/* Bento 4: AI Governance Suite */}
-            <div className="md:col-span-2 p-8 rounded-3xl bg-[#0d1b2a]/80 border border-white/15 backdrop-blur-xl relative group hover:border-purple-500/50 transition-all duration-300">
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center mb-6">
-                <Sparkles className="w-6 h-6 text-purple-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3">AI Document & Investor Sentiment Suite</h3>
-              <p className="text-slate-100 text-sm md:text-base leading-relaxed mb-6 font-normal">
-                Empower your shareholders with instant AI executive summaries of lengthy annual reports, proxy notices, and resolution agendas. Monitor live sentiment during meeting Q&A sessions.
+              <h3 className="text-xl font-bold text-white mb-3">PostgreSQL Row-Level Security</h3>
+              <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                Database isolation is enforced at the PostgreSQL engine level via Row-Level Security (RLS) policies. Shareholders can only read resolutions and cast ballots within authorized sessions.
               </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3.5 py-1 rounded-full bg-purple-500/20 text-purple-200 text-xs font-semibold border border-purple-400/30">Meeting Notice Summaries</span>
-                <span className="px-3.5 py-1 rounded-full bg-purple-500/20 text-purple-200 text-xs font-semibold border border-purple-400/30">Live Sentiment Monitor</span>
-                <span className="px-3.5 py-1 rounded-full bg-purple-500/20 text-purple-200 text-xs font-semibold border border-purple-400/30">Multi-Language Ready</span>
-              </div>
             </div>
 
+            <div className="p-8 rounded-3xl bg-[#0d1b2a]/80 border border-white/15 backdrop-blur-xl">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mb-6">
+                <Globe className="w-6 h-6 text-emerald-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">TLS 1.3 &amp; Storage Encryption</h3>
+              <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                All data in transit is encrypted using TLS 1.3 over HTTPS. Database volumes and persistent storage are encrypted at rest using managed AES-256 disk volume encryption.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link to="/security" id="security-explore-link">
+              <Button variant="outline" className="border-white/20 hover:bg-white/10 text-white font-semibold">
+                Read Full Technical Security Architecture <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ─── 5. STREAMLINED 3-STEP PROCESS ─── */}
-      <section className="py-20" aria-label="How it works">
+      {/* ─── 9. HOW IT WORKS (5-Step Lifecycle) ─── */}
+      <section className="py-20" aria-label="End-to-end governance lifecycle">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3">
-              How It <span className="text-blue-400">Works</span>
+              End-to-End Governance <span className="text-blue-400">Lifecycle</span>
             </h2>
-            <p className="text-slate-200 text-base font-normal">From organization setup to consolidated Scrutinizer reporting in three steps.</p>
+            <p className="text-slate-200 text-base font-normal">From meeting notice dispatch to official scrutinizer reporting in five structured steps.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 relative">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 relative">
             {[
               {
                 step: "01",
-                title: "Upload & Schedule",
-                desc: "Import master shareholder register and configure ordinary or special resolutions with automated voting timers.",
+                title: "Roster Setup",
+                desc: "Company imports shareholder register as of record cut-off date with weighted share balances.",
                 icon: UploadCloud,
               },
               {
                 step: "02",
-                title: "Secure Voting",
-                desc: "Shareholders receive secure links, authenticate via 2-Factor verification, and cast weighted ballots on any device in under 30 seconds.",
-                icon: Smartphone,
+                title: "Notice & Credentials",
+                desc: "Notice of meeting dispatched with resolution agendas and secure access instructions.",
+                icon: FileText,
               },
               {
                 step: "03",
+                title: "OTP Verification",
+                desc: "Shareholders authenticate via Demat / Folio credentials and keyed 6-digit OTP.",
+                icon: KeyRound,
+              },
+              {
+                step: "04",
+                title: "Weighted Voting",
+                desc: "Shareholders submit FOR/AGAINST ballots; votes are cryptographically sealed with SHA-256.",
+                icon: Smartphone,
+              },
+              {
+                step: "05",
                 title: "Scrutinizer Export",
-                desc: "Scrutinizers unblock digital vault with two witnesses and export consolidated Form MGT-13 reports for Chairman submission.",
+                desc: "Scrutinizer unblocks results with two witnesses and exports Form MGT-13 aligned reports.",
                 icon: FileCheck2,
               }
             ].map((item, i) => (
-              <div key={i} className="p-8 rounded-3xl bg-[#0d1b2a]/80 border border-white/15 relative group hover:border-blue-500/40 transition-all shadow-lg">
-                <div className="text-4xl font-black text-cyan-400 mb-4 font-mono">{item.step}</div>
-                <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
-                <p className="text-slate-200 text-xs sm:text-sm leading-relaxed font-normal">{item.desc}</p>
+              <div key={i} className="p-6 rounded-3xl bg-[#0d1b2a]/80 border border-white/15 relative group hover:border-blue-500/40 transition-all shadow-lg flex flex-col justify-between">
+                <div>
+                  <div className="text-2xl font-black text-cyan-400 mb-3 font-mono">{item.step}</div>
+                  <h3 className="text-base font-bold text-white mb-2">{item.title}</h3>
+                  <p className="text-slate-300 text-xs leading-relaxed font-normal">{item.desc}</p>
+                </div>
               </div>
             ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link to="/how-it-works" id="how-it-works-link">
+              <Button variant="outline" className="border-white/20 hover:bg-white/10 text-white font-semibold">
+                View Detailed Operational Workflow <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ─── 6. SECURITY, COMPLIANCE & BENCHMARK MATRIX ─── */}
-      <SecurityComplianceSection />
+      {/* ─── 10. GOVERNANCE RESOURCES & STATUTORY KNOWLEDGE BASE ─── */}
+      <section className="py-20 bg-white/[0.02] border-y border-white/10" aria-label="Statutory resources">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-bold uppercase tracking-wider mb-4">
+              <BookOpen className="w-3.5 h-3.5" />
+              Educational Knowledge Base
+            </div>
+            <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4">
+              Corporate Governance &amp; <span className="text-blue-400">Statutory Guides</span>
+            </h2>
+            <p className="text-slate-200 text-base md:text-lg font-normal">
+              In-depth analyses of corporate secretarial procedures, legal precedents, and electronic voting statutory mandates.
+            </p>
+          </div>
 
-      {/* ─── 7. ACCORDION FAQ ─── */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {featuredResources.map((res) => (
+              <Link 
+                key={res.href} 
+                to={res.href}
+                className="p-7 rounded-3xl bg-[#0d1b2a]/80 border border-white/15 hover:border-blue-400/40 transition-all duration-300 shadow-xl group flex flex-col justify-between"
+              >
+                <div>
+                  <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-cyan-300 text-xs font-semibold mb-3 border border-white/15">
+                    {res.tag}
+                  </span>
+                  <h3 className="text-lg md:text-xl font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">
+                    {res.title}
+                  </h3>
+                  <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-4">
+                    {res.desc}
+                  </p>
+                </div>
+                <div className="text-xs font-semibold text-cyan-400 flex items-center gap-1">
+                  Read Statutory Guide <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link to="/resources" id="resources-hub-link">
+              <Button className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-semibold gap-2 rounded-xl">
+                View All Statutory E-Voting Resources <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FAQ ACCORDION ─── */}
       <section className="py-20" aria-label="Frequently asked questions" id="faq">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3">
               Frequently Asked <span className="text-blue-400">Questions</span>
             </h2>
-            <p className="text-slate-200 text-sm md:text-base font-normal">Regulatory and operational answers for corporate boards and governance teams.</p>
+            <p className="text-slate-200 text-sm md:text-base font-normal">Regulatory and operational answers for corporate boards and secretarial teams.</p>
           </div>
 
           <div className="space-y-3.5">
@@ -416,6 +681,7 @@ const Index = () => {
                   onClick={() => setActiveFaq(activeFaq === index ? null : index)}
                   className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-white text-sm md:text-base hover:text-blue-400 transition-colors"
                   aria-expanded={activeFaq === index}
+                  id={`faq-btn-${index}`}
                 >
                   <span className="flex items-center gap-3">
                     <HelpCircle className="w-4 h-4 text-blue-400 shrink-0" />
@@ -427,6 +693,7 @@ const Index = () => {
                   className={`px-5 pb-5 text-sm text-slate-100 leading-relaxed border-t border-white/10 pt-3.5 font-normal ${
                     activeFaq === index ? "block" : "hidden"
                   }`}
+                  id={`faq-answer-${index}`}
                 >
                   {faq.answer}
                 </div>
@@ -436,24 +703,24 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ─── 8. FINAL CONVERSION BANNER ─── */}
-      <section className="py-24 relative overflow-hidden" aria-label="Call to action">
+      {/* ─── 11. PRICING & CONSULTATION CALL-TO-ACTION ─── */}
+      <section className="py-24 relative overflow-hidden" aria-label="Platform consultation">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="p-10 md:p-16 rounded-3xl bg-gradient-to-br from-[#1e3a8a]/90 via-blue-900/80 to-indigo-950/90 border border-blue-400/40 text-center relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-400/15 rounded-full blur-3xl pointer-events-none" />
             <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4">
-              Modernize Your Corporate Governance Today
+              Modernize Your Corporate General Meetings
             </h2>
             <p className="text-blue-100 text-base md:text-lg max-w-xl mx-auto mb-8 font-normal">
-              Join leading global enterprises upgrading their shareholder voting infrastructure with Vote Secure.
+              Structured pricing based on registered shareholder roster volume and meeting requirements. Request a demonstration or review event tiers.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link to="/contact" className="w-full sm:w-auto inline-block">
+              <Link to="/contact" className="w-full sm:w-auto inline-block" id="cta-contact-btn">
                 <Button size="xl" className="w-full sm:w-auto bg-white text-[#1e3a8a] hover:bg-slate-100 font-bold px-8 py-6 rounded-xl shadow-xl border border-white">
                   Schedule Platform Walkthrough
                 </Button>
               </Link>
-              <Link to="/pricing" className="w-full sm:w-auto inline-block">
+              <Link to="/pricing" className="w-full sm:w-auto inline-block" id="cta-pricing-btn">
                 <Button variant="outline" size="xl" className="w-full sm:w-auto border-white/40 text-white font-semibold hover:bg-white/15 px-8 py-6 rounded-xl">
                   View Transparent Pricing
                 </Button>

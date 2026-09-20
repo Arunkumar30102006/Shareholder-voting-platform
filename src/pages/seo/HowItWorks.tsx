@@ -45,12 +45,12 @@ const hiwFaqs = [
     a: "Corporate administrators upload standardized Benpos CSV files received from depositories (NSDL/CDSL) or RTAs as on the cut-off date. The platform verifies DP ID/Client IDs, physical folios, and PANs, automatically calculating each shareholder's exact equity voting power (1 Share = 1 Vote)."
   },
   {
-    q: "How does the platform guarantee ballot secrecy under Rule 20(4)(xii)?",
-    a: "Individual voting choices are decoupled from voter identities and cryptographically sealed using AES-256 GCM encryption. The tally register remains locked in a mathematical vault that cannot be accessed by company directors, administrators, or third parties until the official unblocking ceremony."
+    q: "How does the platform protect ballot secrecy under Rule 20(4)(xii)?",
+    a: "Individual voting choices are decoupled from voter identities in database views and protected by strict PostgreSQL Row-Level Security. The tally register remains locked and cannot be accessed by company directors, administrators, or third parties until the official scrutinizer unblocking ceremony."
   },
   {
     q: "How does the Independent Scrutinizer unblock the electronic voting register?",
-    a: "Post-meeting, the appointed Scrutinizer initiates a digital multi-party unblocking ceremony in the presence of at least two independent witnesses who are not in the employment of the company. Upon cryptographic key unlocking, the system consolidates remote e-votes and venue polls into an MCA-compliant Form MGT-13 draft report."
+    a: "Post-meeting, the appointed Scrutinizer initiates a digital multi-party unblocking ceremony in the presence of at least two independent witnesses who are not in the employment of the company. Upon unblocking, the system consolidates remote e-votes and venue polls into an MCA-aligned Form MGT-13 compatible draft report."
   },
   {
     q: "Can a shareholder modify their vote after submission?",
@@ -85,7 +85,7 @@ const statutoryStages = [
     step: "03",
     phase: "T-3 to T-1 Days (9 AM – 5 PM)",
     title: "Remote E-Voting Window",
-    desc: "Shareholders log in via 2FA (Voting Token or Demat/PAN) and cast weighted ballots on each resolution. Every ballot generates an AES-256 sealed envelope and SHA-256 digital receipt.",
+    desc: "Shareholders log in via secure OTP authentication and cast weighted ballots on each resolution. Every ballot generates an immutable SHA-256 cryptographic digest and digital confirmation receipt.",
     icon: Vote,
     tag: "Remote Balloting",
     color: "from-emerald-500/20 to-teal-500/20 border-emerald-500/30 text-emerald-300"
@@ -326,17 +326,17 @@ export const HowItWorks = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-white">For Shareholders &amp; Institutional Investors</h3>
-                    <p className="text-xs text-slate-300">Frictionless 2FA voting with guaranteed cryptographic ballot secrecy.</p>
+                    <p className="text-xs text-slate-300">Frictionless OTP voting with cryptographic ballot integrity controls.</p>
                   </div>
                 </div>
 
                 <div className="grid sm:grid-cols-3 gap-4 pt-2">
                   <div className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-2">
                     <div className="flex items-center gap-2 text-cyan-300 text-xs font-bold">
-                      <KeyRound className="w-4 h-4" /> 1. Dual-Mode 2FA Login
+                      <KeyRound className="w-4 h-4" /> 1. OTP Verification
                     </div>
                     <p className="text-xs text-slate-300 font-normal leading-relaxed">
-                      Log in using company-issued Voting User IDs or via your 16-digit Demat Account + PAN with 6-digit email OTP.
+                      Log in using verified shareholder credentials (Folio/Demat ID) and time-sensitive 6-digit email OTP.
                     </p>
                   </div>
 
@@ -369,13 +369,13 @@ export const HowItWorks = () => {
 
             {activePersona === "scrutinizer" && (
               <div className="space-y-6">
-                <div className="flex items-center gap-3">
+                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300">
                     <FileCheck2 className="w-6 h-6 text-purple-400" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-white">For Practising Company Secretaries &amp; Scrutinizers</h3>
-                    <p className="text-xs text-slate-300">Multi-witness digital key unblocking and automated Form MGT-13 drafting.</p>
+                    <p className="text-xs text-slate-300">Multi-witness digital key unblocking and Form MGT-13 aligned report exports.</p>
                   </div>
                 </div>
 
@@ -394,16 +394,16 @@ export const HowItWorks = () => {
                       <Layers className="w-4 h-4" /> 2. Merkle Root Verification
                     </div>
                     <p className="text-xs text-slate-300 font-normal leading-relaxed">
-                      Mathematically verify vote integrity using SHA-256 Merkle proofs, guaranteeing zero ballot modification during transit.
+                      Mathematically verify vote integrity using SHA-256 Merkle proofs to detect any ballot modifications.
                     </p>
                   </div>
 
                   <div className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-2">
                     <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold">
-                      <FileCheck2 className="w-4 h-4" /> 3. Form MGT-13 PDF Export
+                      <FileCheck2 className="w-4 h-4" /> 3. Form MGT-13 Aligned Export
                     </div>
                     <p className="text-xs text-slate-300 font-normal leading-relaxed">
-                      Download the official Form MGT-13 Scrutinizer's Report ready for Chairman countersigning and SEBI LODR 44 stock exchange filing.
+                      Generate structured consolidated report drafts aligned with statutory Form MGT-13 disclosure requirements.
                     </p>
                   </div>
                 </div>

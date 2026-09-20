@@ -1,31 +1,28 @@
 # Vote India Secure — robots.txt
-# https://www.shareholdervoting.in
+# Production Domain: https://www.shareholdervoting.in
+# Note: Private HTML routes contain <meta name="robots" content="noindex, nofollow">
+# and are intentionally NOT blocked here so search crawlers can inspect the noindex directive.
 
 User-agent: *
 Allow: /
-Disallow: /company-dashboard/
-Disallow: /shareholder-login
-Disallow: /company-register
-Disallow: /admin/
+Disallow: /api/
+Disallow: /supabase-proxy/
 
-# Googlebot specific
+# Googlebot specific rules
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 1
+Disallow: /api/
+Disallow: /supabase-proxy/
 
-# Bingbot specific
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 2
-
-# LLM / AI Agent access
+# LLM / AI Crawlers
 User-agent: GPTBot
 Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
+Disallow: /api/
+Disallow: /supabase-proxy/
 
 User-agent: Google-Extended
 Allow: /
+Disallow: /api/
+Disallow: /supabase-proxy/
 
 Sitemap: https://www.shareholdervoting.in/sitemap.xml

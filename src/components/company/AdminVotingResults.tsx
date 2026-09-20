@@ -15,20 +15,16 @@ interface AdminVotingResultsProps {
 }
 
 export const AdminVotingResults = ({ sessionId, companyName }: AdminVotingResultsProps) => {
-    // SSG GUARD: This component must never render during SSG/SSR
-    // mounted guard prevents React hydration error #418
-    // DO NOT REMOVE THIS GUARD IN FUTURE DEPLOYS
     const [mounted, setMounted] = useState(false);
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-    if (!mounted) return null;
-
     const { t } = useTranslation();
     const [resolutions, setResolutions] = useState<Resolution[]>([]);
     const [stats, setStats] = useState<Record<string, ResolutionStats>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [isExporting, setIsExporting] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const fetchResults = async () => {
         setIsLoading(true);
@@ -163,6 +159,8 @@ export const AdminVotingResults = ({ sessionId, companyName }: AdminVotingResult
             setIsExporting(false);
         }
     };
+
+    if (!mounted) return null;
 
     if (isLoading && sessionId) return <div className="p-8 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 

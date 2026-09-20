@@ -187,15 +187,9 @@ const Navbar = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-64 bg-[#020817]/95 backdrop-blur-2xl border-white/10 text-white mt-4 rounded-2xl p-2 shadow-2xl" align="start">
                 <DropdownMenuItem asChild>
-                  <Link to="/shareholder-voting" onClick={(e) => handleNavigation(e, '/shareholder-voting')} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 w-full flex items-center text-xs font-medium">
+                  <Link to="/shareholder-e-voting" onClick={(e) => handleNavigation(e, '/shareholder-e-voting')} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 w-full flex items-center text-xs font-medium">
                     <Users className="w-4 h-4 mr-2.5 text-blue-400" />
                     Shareholder E-Voting
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/remote-e-voting" onClick={(e) => handleNavigation(e, '/remote-e-voting')} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 w-full flex items-center text-xs font-medium">
-                    <ShieldCheck className="w-4 h-4 mr-2.5 text-cyan-400" />
-                    Remote E-Voting (Rule 20)
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -207,7 +201,19 @@ const Navbar = () => {
                 <DropdownMenuItem asChild>
                   <Link to="/egm-voting" onClick={(e) => handleNavigation(e, '/egm-voting')} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 w-full flex items-center text-xs font-medium">
                     <Layers className="w-4 h-4 mr-2.5 text-amber-400" />
-                    EGM &amp; Postal Ballot
+                    EGM Balloting
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/proxy-voting" onClick={(e) => handleNavigation(e, '/proxy-voting')} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 w-full flex items-center text-xs font-medium">
+                    <ShieldCheck className="w-4 h-4 mr-2.5 text-cyan-400" />
+                    Proxy Voting (Sec 105)
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/scrutinizer-tools" onClick={(e) => handleNavigation(e, '/scrutinizer-tools')} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 w-full flex items-center text-xs font-medium">
+                    <Shield className="w-4 h-4 mr-2.5 text-emerald-400" />
+                    Scrutinizer Audit Tools
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -228,8 +234,20 @@ const Navbar = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-64 bg-[#020817]/95 backdrop-blur-2xl border-white/10 text-white mt-4 rounded-2xl p-2 shadow-2xl" align="start">
                 <DropdownMenuItem asChild>
-                  <Link to="/compliance" onClick={(e) => handleNavigation(e, '/compliance')} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 w-full flex items-center text-xs font-medium">
+                  <Link to="/resources" onClick={(e) => handleNavigation(e, '/resources')} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 w-full flex items-center text-xs font-medium">
+                    <BookOpen className="w-4 h-4 mr-2.5 text-blue-400" />
+                    Statutory Knowledge Base
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/regulatory-framework" onClick={(e) => handleNavigation(e, '/regulatory-framework')} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 w-full flex items-center text-xs font-medium">
                     <ShieldCheck className="w-4 h-4 mr-2.5 text-emerald-400" />
+                    Regulatory Framework
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/compliance" onClick={(e) => handleNavigation(e, '/compliance')} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 w-full flex items-center text-xs font-medium">
+                    <ShieldCheck className="w-4 h-4 mr-2.5 text-teal-400" />
                     Statutory Compliance Hub
                   </Link>
                 </DropdownMenuItem>
@@ -241,7 +259,7 @@ const Navbar = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/how-it-works" onClick={(e) => handleNavigation(e, '/how-it-works')} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 w-full flex items-center text-xs font-medium">
-                    <Home className="w-4 h-4 mr-2.5 text-blue-400" />
+                    <Home className="w-4 h-4 mr-2.5 text-indigo-400" />
                     How It Works
                   </Link>
                 </DropdownMenuItem>
@@ -352,17 +370,20 @@ const Navbar = () => {
             <div className="pt-2 border-t border-white/10">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4">Solutions</span>
               <div className="flex flex-col gap-1 mt-1">
-                <Link to="/shareholder-voting" onClick={(e) => handleNavigation(e, '/shareholder-voting')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
+                <Link to="/shareholder-e-voting" onClick={(e) => handleNavigation(e, '/shareholder-e-voting')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
                   <Users className="w-4 h-4 text-blue-400" /> Shareholder E-Voting
-                </Link>
-                <Link to="/remote-e-voting" onClick={(e) => handleNavigation(e, '/remote-e-voting')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
-                  <ShieldCheck className="w-4 h-4 text-cyan-400" /> Remote E-Voting (Rule 20)
                 </Link>
                 <Link to="/agm-voting" onClick={(e) => handleNavigation(e, '/agm-voting')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
                   <Building2 className="w-4 h-4 text-indigo-400" /> AGM E-Voting
                 </Link>
                 <Link to="/egm-voting" onClick={(e) => handleNavigation(e, '/egm-voting')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
-                  <Layers className="w-4 h-4 text-amber-400" /> EGM &amp; Postal Ballot
+                  <Layers className="w-4 h-4 text-amber-400" /> EGM Balloting
+                </Link>
+                <Link to="/proxy-voting" onClick={(e) => handleNavigation(e, '/proxy-voting')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
+                  <ShieldCheck className="w-4 h-4 text-cyan-400" /> Proxy Voting (Sec 105)
+                </Link>
+                <Link to="/scrutinizer-tools" onClick={(e) => handleNavigation(e, '/scrutinizer-tools')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
+                  <Shield className="w-4 h-4 text-emerald-400" /> Scrutinizer Audit Tools
                 </Link>
                 <Link to="/corporate-voting" onClick={(e) => handleNavigation(e, '/corporate-voting')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
                   <Shield className="w-4 h-4 text-purple-400" /> Corporate Governance
@@ -371,16 +392,22 @@ const Navbar = () => {
             </div>
 
             <div className="pt-2 border-t border-white/10">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4">Trust &amp; Governance</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4">Statutory &amp; Security</span>
               <div className="flex flex-col gap-1 mt-1">
+                <Link to="/resources" onClick={(e) => handleNavigation(e, '/resources')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
+                  <BookOpen className="w-4 h-4 text-blue-400" /> Statutory Knowledge Base
+                </Link>
+                <Link to="/regulatory-framework" onClick={(e) => handleNavigation(e, '/regulatory-framework')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" /> Regulatory Framework
+                </Link>
                 <Link to="/compliance" onClick={(e) => handleNavigation(e, '/compliance')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" /> Statutory Compliance Hub
+                  <ShieldCheck className="w-4 h-4 text-teal-400" /> Statutory Compliance Hub
                 </Link>
                 <Link to="/security" onClick={(e) => handleNavigation(e, '/security')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
                   <Lock className="w-4 h-4 text-cyan-400" /> Technical Security Model
                 </Link>
                 <Link to="/how-it-works" onClick={(e) => handleNavigation(e, '/how-it-works')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
-                  <Home className="w-4 h-4 text-blue-400" /> How It Works
+                  <Home className="w-4 h-4 text-indigo-400" /> How It Works
                 </Link>
                 <Link to="/faqs" onClick={(e) => handleNavigation(e, '/faqs')} className="flex items-center gap-3 text-sm px-4 py-2 rounded-xl text-slate-300 hover:bg-white/5">
                   <BookOpen className="w-4 h-4 text-amber-400" /> E-Voting FAQs

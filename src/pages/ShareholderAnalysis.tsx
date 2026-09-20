@@ -22,21 +22,17 @@ const COLORS = ['#8b5cf6', '#3b82f6', '#ec4899', '#10b981'];
 
 
 export const ShareholderAnalysis = () => {
-    // SSG GUARD: This component must never render during SSG/SSR
-    // mounted guard prevents React hydration error #418
-    // DO NOT REMOVE THIS GUARD IN FUTURE DEPLOYS
     const [mounted, setMounted] = useState(false);
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-    if (!mounted) return null;
-
     const navigate = useNavigate();
     const { t } = useTranslation();
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [aiInsight, setAiInsight] = useState('');
     const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         fetchMetrics();
@@ -52,16 +48,18 @@ export const ShareholderAnalysis = () => {
             }
 
             // 1. Fetch shareholder name and login id first for the header
-            const { data: shareholderData, error: shareholderError } = await supabase
-                .from('shareholders')
-                .select('shareholder_name, login_id')
+            const { data: shareholderData, error: shareholderError } = await (supabase
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .from('shareholders') as any)
+                .select('name, login_id')
                 .eq('id', shareholderId)
                 .single();
 
             if (shareholderError || !shareholderData) throw new Error("Could not find shareholder profile mapping");
 
-            // 2. Call the new RPC
-            const { data, error } = await supabase.rpc('get_shareholder_analysis_metrics', {
+            // 2. Call the RPC
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data, error } = await (supabase.rpc as any)('get_shareholder_analysis_metrics', {
                 _shareholder_id: shareholderId
             });
 
@@ -70,16 +68,14 @@ export const ShareholderAnalysis = () => {
             // Merge the base data with the RPC metrics
             const fullMetrics = {
                 ...data as unknown as DashboardMetrics,
-                shareholder_name: shareholderData.shareholder_name,
+                shareholder_name: shareholderData.name || shareholderData.shareholder_name || "Shareholder",
                 login_id: shareholderData.login_id
             };
 
             setMetrics(fullMetrics);
 
         } catch (error: unknown) {
-            console.error('Error fetching metrics:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to load dashboard metrics';
-            toast.error(errorMessage);
+            console.error("Failed to load shareholder metrics", error);
         } finally {
             setIsLoading(false);
         }
@@ -90,23 +86,21 @@ export const ShareholderAnalysis = () => {
         setIsGeneratingAi(true);
 
         const promptText = `
-        As a financial analyst AI, analyze these metrics for shareholder ${metrics.shareholder_name}:
+        As a corporate governance analyst AI, analyze these metrics for shareholder ${metrics.shareholder_name}:
         - Shares Owned: ${metrics.total_shares} (${metrics.shareholding_percentage}%)
         - Total Votes Cast: ${metrics.total_votes_cast} out of ${metrics.total_resolutions} eligible resolutions
         - Participation Rate: ${metrics.participation_rate}%
         
-        Provide a very brief 3-sentence summary of their engagement and influence level within the company.
-        Format heavily with emojis.
+        Provide a brief 3-sentence summary of their voting engagement and influence level.
         `;
 
         try {
             const { data, error } = await supabase.functions.invoke('ai-ops', {
-                body: { action: 'chat', payload: { message: promptText } },
-                headers: { "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}` }
+                body: { action: 'chat', payload: { message: promptText } }
             });
 
             if (error) throw error;
-            setAiInsight(data.result);
+            setAiInsight(data?.result || 'No insight available.');
             toast.success('AI Analysis Generated!');
         } catch (error) {
             console.error('AI Error:', error);
@@ -115,6 +109,8 @@ export const ShareholderAnalysis = () => {
             setIsGeneratingAi(false);
         }
     };
+
+    if (!mounted) return null;
 
     if (isLoading) {
         return (

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Shield, Lock, Mail, Phone, MapPin } from "lucide-react";
+import { Shield, Lock, Mail, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const Footer = () => {
@@ -29,20 +29,19 @@ const Footer = () => {
               </p>
             </div>
             <div className="space-y-2 mb-6">
-              <p className="text-xs text-muted-foreground"><strong>Operations:</strong> BKC, Mumbai, Maharashtra, India</p>
-              <p className="text-xs text-muted-foreground"><strong>Grievance & Support:</strong> support@shareholdervoting.in</p>
+              <p className="text-xs text-muted-foreground"><strong>Grievance &amp; Support:</strong> support@shareholdervoting.in</p>
             </div>
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2 text-xs text-white bg-green-900/40 px-3 py-1.5 rounded-full border border-green-500/30">
-                <Shield className="w-4 h-4 text-green-400" />
-                <span>SSL Secured</span>
+                <Shield className="w-3.5 h-3.5 text-green-400" />
+                <span>TLS 1.3 In Transit</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-white bg-blue-900/40 px-3 py-1.5 rounded-full border border-blue-500/30">
-                <Lock className="w-4 h-4 text-blue-400" />
-                <span>AES-256 Bit</span>
+                <Lock className="w-3.5 h-3.5 text-blue-400" />
+                <span>SHA-256 Audit Trail</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-white bg-purple-900/40 px-3 py-1.5 rounded-full border border-purple-500/30">
-                <Shield className="w-4 h-4 text-purple-400" />
+                <Shield className="w-3.5 h-3.5 text-purple-400" />
                 <span>DPDP Act 2023 Aligned</span>
               </div>
             </div>
@@ -53,10 +52,12 @@ const Footer = () => {
             <h3 className="font-semibold text-lg mb-4 text-white">E-Voting Solutions</h3>
             <ul className="space-y-3">
               {[
-                { name: "Shareholder Voting", path: "/shareholder-voting" },
-                { name: "Remote E-Voting (Rule 20)", path: "/remote-e-voting" },
+                { name: "Shareholder E-Voting", path: "/shareholder-e-voting" },
                 { name: "AGM E-Voting", path: "/agm-voting" },
-                { name: "EGM & Postal Ballot", path: "/egm-voting" },
+                { name: "EGM Balloting", path: "/egm-voting" },
+                { name: "Proxy Voting Solutions", path: "/proxy-voting" },
+                { name: "Scrutinizer Audit Tools", path: "/scrutinizer-tools" },
+                { name: "Remote E-Voting (Rule 20)", path: "/remote-e-voting" },
                 { name: "Corporate Governance", path: "/corporate-voting" },
                 { name: "Security Architecture", path: "/security" },
                 { name: "How It Works", path: "/how-it-works" },
@@ -70,19 +71,19 @@ const Footer = () => {
             </ul>
           </nav>
 
-          {/* Quick Links & Legal */}
-          <nav aria-label="Governance and Company">
-            <h3 className="font-semibold text-lg mb-4 text-white">Governance &amp; Company</h3>
+          {/* Statutory Knowledge & Legal */}
+          <nav aria-label="Governance and Legal Resources">
+            <h3 className="font-semibold text-lg mb-4 text-white">Resources &amp; Law</h3>
             <ul className="space-y-3">
               {[
+                { name: "Statutory Knowledge Base", path: "/resources" },
+                { name: "Regulatory Framework", path: "/regulatory-framework" },
                 { name: "Statutory Compliance", path: "/compliance" },
+                { name: "Data Protection Architecture", path: "/data-protection" },
                 { name: "Knowledge Center (FAQs)", path: "/faqs" },
-                { name: "About Us", path: "/about" },
-                { name: "Services", path: "/services" },
-                { name: "Blog & Insights", path: "/blog" },
+                { name: "Blog & Regulatory Analysis", path: "/blog" },
                 { name: "Privacy Policy", path: "/privacy-policy" },
                 { name: "Terms of Service", path: "/terms-of-service" },
-                { name: "Contact Us", path: "/contact" },
               ].map((item) => (
                 <li key={item.name}>
                   <Link to={item.path} className="text-sm text-slate-300 hover:text-cyan-300 font-medium transition-colors">
@@ -93,7 +94,7 @@ const Footer = () => {
             </ul>
           </nav>
 
-          {/* Contact */}
+          {/* Contact & Support */}
           <div>
             <h3 className="font-semibold text-lg mb-4 text-white">{t("footer_contact")}</h3>
             <ul className="space-y-3">
@@ -107,9 +108,16 @@ const Footer = () => {
               </li>
               <li className="flex items-start gap-3 text-sm text-slate-200 font-medium">
                 <MapPin className="w-4 h-4 text-cyan-400 mt-0.5" aria-hidden="true" />
-                <span>Bandra Kurla Complex (BKC)<br />Mumbai, Maharashtra 400051, India</span>
+                <span>India · Corporate Governance &amp; Cloud Operations</span>
               </li>
             </ul>
+            <div className="mt-6">
+              <Link to="/contact">
+                <button className="text-xs font-semibold px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all">
+                  Contact Support Desk →
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -118,7 +126,7 @@ const Footer = () => {
       <div className="border-t border-white/10">
         <div className="container mx-auto px-4 py-5">
           <div className="flex items-center justify-center text-center text-sm text-slate-300 font-medium">
-            <p>© 2026 Vote Secure. All rights reserved.</p>
+            <p>© 2026 Vote India Secure. All rights reserved.</p>
           </div>
         </div>
       </div>

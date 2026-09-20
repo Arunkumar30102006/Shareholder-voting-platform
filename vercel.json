@@ -110,10 +110,6 @@
           "value": "DENY"
         },
         {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        },
-        {
           "key": "Referrer-Policy",
           "value": "origin-when-cross-origin"
         },
@@ -125,6 +121,30 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/auth/initiate",
+      "destination": "https://tpfvvuuumfuvbqkackwk.supabase.co/functions/v1/initiate-shareholder-auth"
+    },
+    {
+      "source": "/api/auth/verify",
+      "destination": "https://tpfvvuuumfuvbqkackwk.supabase.co/functions/v1/verify-shareholder-otp"
+    },
+    {
+      "source": "/api/auth/session",
+      "destination": "https://tpfvvuuumfuvbqkackwk.supabase.co/functions/v1/shareholder-session"
+    },
+    {
+      "source": "/api/cast-vote",
+      "destination": "https://tpfvvuuumfuvbqkackwk.supabase.co/functions/v1/cast-vote"
+    },
+    {
+      "source": "/api/eligible-events",
+      "destination": "https://tpfvvuuumfuvbqkackwk.supabase.co/functions/v1/eligible-events"
+    },
+    {
+      "source": "/api/functions/:path*",
+      "destination": "https://tpfvvuuumfuvbqkackwk.supabase.co/functions/v1/:path*"
+    },
     {
       "source": "/supabase-proxy/:path*",
       "destination": "https://tpfvvuuumfuvbqkackwk.supabase.co/:path*"

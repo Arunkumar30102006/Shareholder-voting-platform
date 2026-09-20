@@ -10,24 +10,36 @@ export interface Nominee {
   created_at: string;
 }
 
+export type EventType = 'AGM' | 'EGM' | 'GENERAL_MEETING' | 'POSTAL_BALLOT';
+export type EgmRequisitionType = 'BOARD_CONVENED' | 'MEMBER_REQUISITION_SEC_100' | 'NCLT_DIRECTED';
+export type EventStatus = 'draft' | 'published' | 'open' | 'closed' | 'results_finalized' | 'archived';
+
 export interface VotingSession {
   id: string;
   title: string;
   description: string | null;
-  start_date: string;
-  end_date: string;
-  is_active: boolean;
+  event_type: EventType;
+  status: EventStatus;
+  voting_start: string;
+  voting_end: string;
+  meeting_date: string | null;
+  meeting_end_date: string | null;
+  notice_date?: string | null;
+  record_date: string | null;
+  start_date?: string;
+  end_date?: string;
+  is_active?: boolean;
   meeting_link: string | null;
   meeting_password: string | null;
   meeting_platform: string | null;
   voting_instructions: string | null;
   is_meeting_emails_sent: boolean;
-  meeting_start_date: string | null;
-  meeting_end_date: string | null;
+  egm_requisition_type?: EgmRequisitionType | null;
+  is_short_notice?: boolean;
+  explanatory_statement_reference?: string | null;
+  egm_reason?: string | null;
   auto_start_done?: boolean;
   auto_end_done?: boolean;
-  record_date: string | null;
-  status: string | null;
 }
 
 export interface Resolution {

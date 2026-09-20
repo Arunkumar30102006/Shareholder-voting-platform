@@ -27,9 +27,9 @@
 
 ## 📌 Executive Summary
 
-**Vote India Secure** ([shareholdervoting.in](https://www.shareholdervoting.in)) is an enterprise-grade, cryptographically verifiable electronic voting SaaS engineered specifically for Indian corporate democracy. It empowers publicly listed corporations, unlisted enterprises, cooperatives, and Registrar & Transfer Agents (RTAs) to conduct seamless Annual General Meetings (AGMs), Extraordinary General Meetings (EGMs), and Postal Ballots.
-
-Built from the ground up to replace cumbersome legacy workflows, the platform features mathematical ballot sealing (AES-256 + SHA-256 Merkle proofs), two-witness digital scrutinizer key unblocking, instant **Form MGT-13** reporting, Section 103 Quorum tracking, multi-mode 2FA authentication, and strict architectural alignment with the **Companies Act 2013**, **SEBI (LODR) Regulations 2015**, and the **Digital Personal Data Protection (DPDP) Act 2023**.
+**Vote India Secure** ([shareholdervoting.in](https://www.shareholdervoting.in)) is an enterprise-grade electronic voting SaaS engineered specifically for Indian corporate democracy. It empowers publicly listed corporations, unlisted enterprises, cooperatives, and Registrar & Transfer Agents (RTAs) to conduct seamless Annual General Meetings (AGMs), Extraordinary General Meetings (EGMs), and Postal Ballots.
+ 
+Built from the ground up to replace cumbersome legacy workflows, the platform features SHA-256 tamper-evident audit hashing, scrutinizer digital unblocking workflows, instant **Form MGT-13** reporting, Section 103 Quorum tracking, multi-mode 2FA authentication, and strict architectural alignment with the **Companies Act 2013**, **SEBI (LODR) Regulations 2015**, and the **Digital Personal Data Protection (DPDP) Act 2023**.
 
 ---
 
@@ -48,12 +48,12 @@ flowchart TD
         OTP -->|"Authenticated Session"| Ballot["Interactive Weighted Ballot Card"]
     end
 
-    subgraph Sealing["3. Cryptographic Sealing & Decoupling"]
-        CryptoEngine["Ballot Cryptographic Engine"]
-        Vault[("Encrypted Ballot Vault")]
-        Merkle["Immutable Merkle Audit Ledger"]
+    subgraph Sealing["3. Tamper-Evident Audit & Verification"]
+        CryptoEngine["Ballot Verification Engine"]
+        Vault[("Audit Trail Vault")]
+        Merkle["SHA-256 Audit Trail"]
         ShareholderReceipt["Verifiable QR & PDF Receipt"]
-        CryptoEngine -->|"AES-256 GCM Encryption"| Vault
+        CryptoEngine -->|"PostgreSQL RLS & Integrity"| Vault
         CryptoEngine -->|"SHA-256 Hashing"| Merkle
         CryptoEngine -->|"Digital Receipt"| ShareholderReceipt
     end
@@ -211,12 +211,19 @@ npm install
 ```
 
 ### 3. Configure Environment Variables
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory for frontend development:
 ```env
 VITE_SUPABASE_URL=https://your-supabase-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-VITE_RESEND_API_KEY=your-resend-api-key
-GROQ_API_KEY=your-groq-api-key
+VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+VITE_SUPABASE_PROJECT_ID=your-project-id
+```
+
+Backend secrets must **never** be added to the frontend `.env`. Configure them in Supabase Edge Functions:
+```bash
+supabase secrets set RESEND_API_KEY="re_..."
+supabase secrets set GROQ_API_KEY="gsk_..."
+supabase secrets set OTP_HMAC_SECRET="your-64-character-hex-hmac-secret"
 ```
 
 ### 4. Start Local Development Server
@@ -233,9 +240,11 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | :--- | :--- |
 | `npm run dev` | Starts the Vite local development server with Hot Module Replacement (HMR). |
 | `npm run build` | Builds the client bundle and static site pages via `vite-react-ssg`. |
-| `npm run preview` | Locally serves the production SSG build from `dist/client`. |
-| `npx tsc --noEmit` | Runs strict TypeScript type-checking across all `.ts` and `.tsx` files. |
-| `npx eslint .` | Runs ESLint analysis across the codebase. |
+| `npm run typecheck` | Runs strict TypeScript type-checking across all `.ts` and `.tsx` files. |
+| `npm run lint` | Runs ESLint analysis across the codebase. |
+| `npm run test` | Runs the automated unit and integration test suite. |
+| `npm run verify` | Verifies build output HTML, JSON-LD schemas, images, and internal links. |
+| `npm run preview` | Locally serves the production SSG build from `dist`. |
 
 ---
 

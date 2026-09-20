@@ -146,6 +146,7 @@ export const AnimatedOtpVerification: React.FC<AnimatedOtpVerificationProps> = (
       const indexToFocus = firstEmptyIndex === -1 ? 0 : firstEmptyIndex;
       inputRefs.current[indexToFocus]?.focus();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disabled]);
 
   // Handle actual verification execution

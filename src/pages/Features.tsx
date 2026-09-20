@@ -16,23 +16,23 @@ const breadcrumbSchema = createBreadcrumbSchema([
 const mainFeatures = [
   {
     icon: Lock,
-    title: "End-to-End Encryption",
-    description: "All voting data is encrypted from your device to our servers using AES-256 encryption. Votes are cryptographically sealed, ensuring no tampering is possible at any stage of the process.",
+    title: "Cryptographic Ballot Integrity",
+    description: "All voting data is protected in transit with TLS 1.3 and hashed with SHA-256 digests. Ballots are cryptographically sealed and decoupled in database views, ensuring tamper evidence at all stages.",
     details: [
-      "AES-256 bit encryption at rest and in transit",
+      "TLS 1.3 transport security",
       "Cryptographic vote hashing with SHA-256",
-      "Secure session management with auto-expiry",
-      "Zero-knowledge proof architecture"
+      "Secure session management with HttpOnly cookies",
+      "Decoupled secret ballot architecture"
     ],
     color: "from-blue-500 to-cyan-500",
   },
   {
     icon: Fingerprint,
-    title: "Two-Factor Authentication",
-    description: "Every shareholder is verified through a multi-step authentication flow combining unique credentials with OTP verification, preventing unauthorized access.",
+    title: "Secure Shareholder Authentication",
+    description: "Every shareholder is verified through a structured authentication flow combining roster credentials with keyed OTP verification, preventing unauthorized access.",
     details: [
-      "Unique per-session login credentials",
-      "Email-based OTP verification",
+      "Voter roster credential verification",
+      "Keyed HMAC-SHA-256 OTP verification",
       "Auto-invalidation after vote submission",
       "Rate-limited login attempts"
     ],

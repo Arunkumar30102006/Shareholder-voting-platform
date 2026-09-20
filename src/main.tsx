@@ -8,7 +8,10 @@ import './index.css'
 export const createRoot = ViteReactSSG(
   { routes },
   ({ isClient }) => {
-    // Client-only initialization can go here if needed.
-    // All providers are in RootLayout (App.tsx), not here.
+    if (isClient) {
+      import('./lib/analyticsLoader').then(({ initAnalyticsIfConsented }) => {
+        initAnalyticsIfConsented();
+      });
+    }
   },
 )

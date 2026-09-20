@@ -63,9 +63,9 @@ export const ShareholderVoting = () => {
   return (
     <div className="min-h-screen bg-[#020817] text-white selection:bg-blue-500/30">
       <SEO
-        title="Shareholder E-Voting Guide | How to Vote Online for AGMs & EGMs"
-        description="Comprehensive shareholder electronic voting guide: Demat (DP ID / Client ID) and Physical folio login, cut-off dates, weighted voting power, and cryptographic receipts."
-        canonical="/shareholder-voting"
+        title="Shareholder E-Voting Software | Vote India Secure"
+        description="Enterprise shareholder electronic voting software with OTP authentication, weighted share representation, and cryptographic ballot verification."
+        canonical="/shareholder-e-voting"
         schemas={[breadcrumbSchema, shareholderFaqSchema]}
       />
 
@@ -85,7 +85,7 @@ export const ShareholderVoting = () => {
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight">
               Shareholder{" "}
               <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300 bg-clip-text text-transparent">
-                E-Voting Guide
+                E-Voting Software
               </span>
             </h1>
 
@@ -191,8 +191,8 @@ export const ShareholderVoting = () => {
             {[
               {
                 step: "01",
-                title: "2FA Authentication",
-                desc: "Log in with your User ID and password, followed by a secure 6-digit animated OTP verification.",
+                title: "Secure OTP Authentication",
+                desc: "Log in with your User ID and credentials, followed by secure 6-digit keyed OTP verification.",
                 icon: KeyRound,
               },
               {
@@ -284,6 +284,17 @@ export const ShareholderVoting = () => {
                 </AnimatePresence>
               </div>
             ))}
+          </div>
+
+          {/* Statutory Attribution Card */}
+          <div className="mt-12 p-5 rounded-2xl bg-white/[0.03] border border-white/10 text-xs text-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <p className="font-semibold text-white">Statutory Source &amp; Legal Framework</p>
+              <p className="text-slate-400 mt-0.5">Section 108 of the Companies Act 2013 read with Rule 20 of Companies (Management and Administration) Rules 2014.</p>
+            </div>
+            <div className="text-left sm:text-right shrink-0">
+              <span className="inline-block px-2.5 py-1 rounded bg-blue-500/20 text-blue-300 font-mono text-[11px] border border-blue-400/30">Last Reviewed: 2026-09-20</span>
+            </div>
           </div>
         </div>
       </section>

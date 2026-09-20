@@ -59,8 +59,8 @@ export const EgmVoting = () => {
   return (
     <div className="min-h-screen bg-[#020817] text-white selection:bg-blue-500/30">
       <SEO
-        title="EGM & Postal Ballot E-Voting Guide | Companies Act Section 100 & 110"
-        description="Comprehensive guide to Extraordinary General Meetings (EGM) and Postal Ballot e-voting under Companies Act Section 100, 101, 108 & 110 for urgent special resolutions."
+        title="EGM E-Voting Platform for Companies | Vote India Secure"
+        description="Extraordinary General Meeting (EGM) e-voting platform for urgent special resolutions, Section 100 member requisitions, and statutory shareholder voting workflows."
         canonical="/egm-voting"
         schemas={[breadcrumbSchema, egmFaqSchema]}
       />
@@ -75,19 +75,18 @@ export const EgmVoting = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-wider mb-6">
               <Zap className="w-4 h-4 text-amber-400" />
-              <span>Special Business &amp; Postal Ballot Governance</span>
+              <span>Special Business &amp; General Meeting Governance</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight">
               Extraordinary General Meeting{" "}
               <span className="bg-gradient-to-r from-amber-400 via-orange-300 to-yellow-200 bg-clip-text text-transparent">
-                (EGM) &amp; Postal Ballot
-              </span>{" "}
-              E-Voting
+                E-Voting Platform
+              </span>
             </h1>
 
             <p className="text-base sm:text-xl text-slate-200 max-w-3xl mx-auto font-normal leading-relaxed mb-10">
-              A comprehensive statutory guide to convening EGMs, passing Special Resolutions under Section 114, and executing electronic postal ballots under Section 110 of the Companies Act, 2013.
+              A comprehensive platform for convening EGMs, passing Special Resolutions under Section 114, and executing electronic voting workflows under Section 100 &amp; 108 of the Companies Act, 2013.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -97,9 +96,9 @@ export const EgmVoting = () => {
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <Link to="/remote-e-voting" className="w-full sm:w-auto">
+              <Link to="/resources/how-egm-e-voting-works" className="w-full sm:w-auto">
                 <Button variant="outline" size="xl" className="w-full border-white/20 hover:bg-white/10 text-white font-semibold gap-2 px-8 py-6 rounded-xl">
-                  Remote E-Voting Rules
+                  EGM Operational Guide
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </Link>
@@ -211,25 +210,60 @@ export const EgmVoting = () => {
               </div>
             ))}
           </div>
+
+          {/* Statutory Legal Disclaimer */}
+          <div className="mt-12 p-5 rounded-2xl bg-black/40 border border-white/10 text-center max-w-3xl mx-auto">
+            <p className="text-[11px] text-slate-400 leading-relaxed font-normal">
+              <span className="font-bold text-slate-300">Statutory Legal Disclaimer: </span>
+              This page provides informational guidance on the statutory framework governing Extraordinary General Meetings and Postal Ballots under the Companies Act, 2013 and SEBI (LODR) Regulations, 2015. It does not constitute legal or corporate secretarial advice. Companies must consult qualified company secretaries and legal counsel to assess specific compliance obligations, Section 101(1) shorter notice consents, and regulatory filings.
+            </p>
+          </div>
+
+          {/* Statutory Attribution Card */}
+          <div className="mt-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 text-left max-w-3xl mx-auto">
+            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
+              Statutory Attribution &amp; Review Metadata
+            </h3>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-400">
+              <div>
+                <dt className="text-slate-500 font-medium">Primary Statutory Source</dt>
+                <dd className="text-slate-200 font-semibold">
+                  Companies Act, 2013 (Section 100, 101, 108, 114) &amp; Rule 20
+                </dd>
+              </div>
+              <div>
+                <dt className="text-slate-500 font-medium">Statutory Version</dt>
+                <dd className="text-slate-200 font-semibold">As amended up to 2026</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500 font-medium">Last Content Review Date</dt>
+                <dd className="text-slate-200 font-semibold">2026-09-20</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500 font-medium">Review Committee</dt>
+                <dd className="text-slate-200 font-semibold">Corporate Governance Review</dd>
+              </div>
+            </dl>
+          </div>
         </div>
       </section>
 
       {/* Internal Navigation */}
       <section className="py-16 bg-[#0d1b2a]/50 border-t border-white/10">
         <div className="container mx-auto px-4 max-w-5xl">
-          <h2 className="text-xl font-bold text-white mb-6 text-center">Related Governance Resources</h2>
+          <h2 className="text-xl font-bold text-white mb-6 text-center">Related Corporate Governance Solutions</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <Link to="/agm-voting" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-400/40 transition-all text-xs font-semibold text-slate-200 hover:text-cyan-300">
-              AGM E-Voting →
+            <Link to="/shareholder-e-voting" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-400/40 transition-all text-xs font-semibold text-slate-200 hover:text-cyan-300">
+              Shareholder E-Voting →
             </Link>
-            <Link to="/remote-e-voting" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-400/40 transition-all text-xs font-semibold text-slate-200 hover:text-cyan-300">
-              Remote E-Voting →
+            <Link to="/proxy-voting" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-400/40 transition-all text-xs font-semibold text-slate-200 hover:text-cyan-300">
+              Proxy Voting →
             </Link>
-            <Link to="/corporate-voting" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-400/40 transition-all text-xs font-semibold text-slate-200 hover:text-cyan-300">
-              Corporate Voting →
+            <Link to="/scrutinizer-tools" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-400/40 transition-all text-xs font-semibold text-slate-200 hover:text-cyan-300">
+              Scrutinizer Tools →
             </Link>
-            <Link to="/compliance" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-400/40 transition-all text-xs font-semibold text-slate-200 hover:text-cyan-300">
-              Statutory Compliance →
+            <Link to="/resources/ordinary-vs-special-resolution" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-400/40 transition-all text-xs font-semibold text-slate-200 hover:text-cyan-300">
+              Special Resolutions →
             </Link>
           </div>
         </div>

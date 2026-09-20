@@ -21,16 +21,12 @@ const VotingAnalytics = ({
     totalCompanyShares = 1000000,
     recordDate,
 }: VotingAnalyticsProps) => {
-    // SSG GUARD: This component must never render during SSG/SSR
-    // mounted guard prevents React hydration error #418
-    // DO NOT REMOVE THIS GUARD IN FUTURE DEPLOYS
     const [mounted, setMounted] = useState(false);
+    const { t } = useTranslation();
+
     useEffect(() => {
         setMounted(true);
     }, []);
-    if (!mounted) return null;
-
-    const { t } = useTranslation();
 
     const participationPercentage =
         totalResolutions > 0 ? (votedResolutions / totalResolutions) * 100 : 0;
@@ -41,6 +37,8 @@ const VotingAnalytics = ({
         { name: t("voting_analytics_voted") || "Voted", value: votedResolutions, color: "#10b981" },
         { name: t("voting_analytics_pending") || "Remaining", value: Math.max(0, totalResolutions - votedResolutions), color: "#1e293b" },
     ];
+
+    if (!mounted) return null;
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">

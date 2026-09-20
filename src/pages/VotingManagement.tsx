@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SEO } from "@/components/layout/SEO";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import {
@@ -54,7 +56,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useTranslation } from "react-i18next";
 import { MerkleTree } from "@/lib/merkle";
 import { simulateBlockchainTransaction } from "@/lib/blockchain";
-import { Nominee, VotingSession, ResolutionResult, AnchorData, Company, Shareholder, Resolution } from "@/types";
+import { Nominee, VotingSession, ResolutionResult, AnchorData, Company, Shareholder, Resolution, EventType, EgmRequisitionType, EventStatus } from "@/types";
 
 const resolutionSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(250),
@@ -72,17 +74,23 @@ const nomineeSchema = z.object({
 });
 
 const sessionSchema = z.object({
+  eventType: z.enum(["AGM", "EGM", "GENERAL_MEETING", "POSTAL_BALLOT"]),
   title: z.string().min(3, "Title must be at least 3 characters").max(200),
   description: z.string().optional(),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
-  meetingStartDate: z.string().optional(),
+  startDate: z.string().min(1, "Voting start date is required"),
+  endDate: z.string().min(1, "Voting end date is required"),
+  meetingDate: z.string().optional(),
   meetingEndDate: z.string().optional(),
+  noticeDate: z.string().optional(),
   meetingLink: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   meetingPassword: z.string().optional(),
   meetingPlatform: z.string().optional(),
   votingInstructions: z.string().optional(),
   recordDate: z.string().min(1, "Record date is required"),
+  egmRequisitionType: z.enum(["BOARD_CONVENED", "MEMBER_REQUISITION_SEC_100", "NCLT_DIRECTED"]).optional(),
+  isShortNotice: z.boolean().optional(),
+  explanatoryStatementReference: z.string().optional(),
+  egmReason: z.string().optional(),
 });
 
 const VotingManagement = () => {
@@ -92,6 +100,7 @@ const VotingManagement = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingEmails, setIsSendingEmails] = useState(false);
   const [company, setCompany] = useState<Company | null>(null);
+  const [allSessions, setAllSessions] = useState<VotingSession[]>([]);
   const [votingSession, setVotingSession] = useState<VotingSession | null>(null);
   const [resolutions, setResolutions] = useState<Resolution[]>([]);
   const [nominees, setNominees] = useState<Nominee[]>([]);
@@ -105,6 +114,7 @@ const VotingManagement = () => {
   const [isAddingNominee, setIsAddingNominee] = useState(false);
 
   const [sessionForm, setSessionForm] = useState({
+    eventType: "AGM" as EventType,
     title: "",
     description: "",
     startDate: "",
@@ -112,10 +122,15 @@ const VotingManagement = () => {
     meetingLink: "",
     meetingPassword: "",
     meetingPlatform: "zoom",
-    meetingStartDate: "",
+    meetingDate: "",
     meetingEndDate: "",
+    noticeDate: "",
     votingInstructions: "",
     recordDate: "",
+    egmRequisitionType: "BOARD_CONVENED" as EgmRequisitionType,
+    isShortNotice: false,
+    explanatoryStatementReference: "",
+    egmReason: "",
   });
 
   const [resolutionForm, setResolutionForm] = useState({
@@ -145,8 +160,8 @@ const VotingManagement = () => {
       return;
     }
 
-    const { data: adminData, error: adminError } = await supabase
-      .from("company_admins")
+    const { data: adminData, error: adminError } = await (supabase
+      .from("company_admins") as any)
       .select("company_id")
       .eq("user_id", session.user.id)
       .maybeSingle();
@@ -157,8 +172,8 @@ const VotingManagement = () => {
       return;
     }
 
-    const { data: companyData, error: companyError } = await supabase
-      .from("companies")
+    const { data: companyData, error: companyError } = await (supabase
+      .from("companies") as any)
       .select("*")
       .eq("id", adminData.company_id)
       .maybeSingle();
@@ -169,8 +184,8 @@ const VotingManagement = () => {
       return;
     }
 
-    setCompany(companyData);
-    await loadVotingSession(companyData.id);
+    setCompany(companyData as Company);
+    await loadVotingSessions(companyData.id);
     await loadShareholders(companyData.id);
     setIsLoading(false);
   };
@@ -204,40 +219,80 @@ const toLocalDateString = (dateOrIso?: string | null) => {
   }
 };
 
-  const loadVotingSession = async (companyId: string) => {
+  const loadVotingSessions = async (companyId: string, targetSessionId?: string) => {
     const { data, error } = await supabase
       .from("voting_sessions")
       .select("*")
       .eq("company_id", companyId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error loading voting session:", error);
+      console.error("Error loading voting sessions:", error);
       return;
     }
 
-    if (data) {
-      setVotingSession(data);
+    if (data && data.length > 0) {
+      const typedSessions = data as unknown as VotingSession[];
+      setAllSessions(typedSessions);
+      const selected = targetSessionId 
+        ? (typedSessions.find(s => s.id === targetSessionId) || typedSessions[0])
+        : (votingSession ? (typedSessions.find(s => s.id === votingSession.id) || typedSessions[0]) : typedSessions[0]);
+
+      setVotingSession(selected);
       setSessionForm({
-        title: data.title || "",
-        description: data.description || "",
-        startDate: toLocalInputString(data.start_date),
-        endDate: toLocalInputString(data.end_date),
-        meetingLink: data.meeting_link || "",
-        meetingPassword: data.meeting_password || "",
-        meetingPlatform: data.meeting_platform || "zoom",
-        meetingStartDate: toLocalInputString(data.meeting_start_date),
-        meetingEndDate: toLocalInputString(data.meeting_end_date),
-        votingInstructions: data.voting_instructions || "",
-        recordDate: toLocalDateString(data.record_date),
+        eventType: (selected.event_type as EventType) || "AGM",
+        title: selected.title || "",
+        description: selected.description || "",
+        startDate: toLocalInputString(selected.voting_start || selected.start_date),
+        endDate: toLocalInputString(selected.voting_end || selected.end_date),
+        meetingDate: toLocalInputString(selected.meeting_date || (selected as unknown as { meeting_start_date?: string }).meeting_start_date),
+        meetingEndDate: toLocalInputString(selected.meeting_end_date),
+        noticeDate: toLocalInputString(selected.notice_date),
+        meetingLink: selected.meeting_link || "",
+        meetingPassword: selected.meeting_password || "",
+        meetingPlatform: selected.meeting_platform || "zoom",
+        votingInstructions: selected.voting_instructions || "",
+        recordDate: toLocalDateString(selected.record_date),
+        egmRequisitionType: (selected.egm_requisition_type as EgmRequisitionType) || "BOARD_CONVENED",
+        isShortNotice: !!selected.is_short_notice,
+        explanatoryStatementReference: selected.explanatory_statement_reference || "",
+        egmReason: selected.egm_reason || "",
       });
 
-      await loadResolutions(data.id);
-      await loadNominees(data.id);
-      await loadResults(data.id);
+      await loadResolutions(selected.id);
+      await loadNominees(selected.id);
+      await loadResults(selected.id);
+    } else {
+      setAllSessions([]);
+      setVotingSession(null);
     }
+  };
+
+  const handleNewSession = () => {
+    setVotingSession(null);
+    setSessionForm({
+      eventType: "AGM",
+      title: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      meetingDate: "",
+      meetingEndDate: "",
+      noticeDate: "",
+      meetingLink: "",
+      meetingPassword: "",
+      meetingPlatform: "zoom",
+      votingInstructions: "",
+      recordDate: "",
+      egmRequisitionType: "BOARD_CONVENED",
+      isShortNotice: false,
+      explanatoryStatementReference: "",
+      egmReason: "",
+    });
+    setResolutions([]);
+    setNominees([]);
+    setResults([]);
+    setActiveTab("schedule");
   };
 
   const loadShareholders = async (companyId: string) => {
@@ -270,19 +325,22 @@ const toLocalDateString = (dateOrIso?: string | null) => {
   };
 
   const loadResults = async (sessionId: string) => {
-    const { data: resolutionsData, error: resError } = await supabase
-      .from("resolutions")
+    const resRes = await (supabase
+      .from("resolutions") as any)
       .select("*")
       .eq("voting_session_id", sessionId);
 
-    if (resError || !resolutionsData) return;
+    if (resRes.error || !resRes.data) return;
+    const resolutionsData = resRes.data as Resolution[];
 
     const mappedResults: ResolutionResult[] = await Promise.all(
       resolutionsData.map(async (res) => {
-        const { data: votes } = await supabase
-          .from("votes")
+        const votesRes = await (supabase
+          .from("votes") as any)
           .select("vote_value, weighted_votes")
           .eq("resolution_id", res.id);
+
+        const votes = votesRes.data as Array<{ vote_value: string; weighted_votes?: number }> | null;
 
         let forCount = 0;
         let againstCount = 0;
@@ -296,16 +354,29 @@ const toLocalDateString = (dateOrIso?: string | null) => {
           else if (val === "ABSTAIN") abstainCount += weight;
         });
 
+        // Statutory majority calculations under Section 114
+        const validVotes = forCount + againstCount;
+        let isWinner = false;
+        if (res.resolution_type === "special") {
+          isWinner = validVotes > 0 && forCount >= 3 * againstCount;
+        } else if (res.resolution_type === "unanimous") {
+          isWinner = forCount > 0 && againstCount === 0;
+        } else {
+          // ordinary
+          isWinner = forCount > againstCount;
+        }
+
         return {
           id: res.id,
           title: res.title,
           description: res.description,
+          resolution_type: res.resolution_type,
           stats: {
             for: forCount,
             against: againstCount,
             abstain: abstainCount,
             total: forCount + againstCount + abstainCount,
-            winner: forCount > againstCount,
+            winner: isWinner,
           },
         };
       })
@@ -337,12 +408,13 @@ const toLocalDateString = (dateOrIso?: string | null) => {
     setIsAnchoring(true);
 
     try {
-      const { data: allVotes, error: votesError } = await supabase
-        .from("votes")
+      const votesRes = await (supabase
+        .from("votes") as any)
         .select("vote_hash")
         .in("resolution_id", results.map(r => r.id));
 
-      if (votesError || !allVotes || allVotes.length === 0) {
+      const allVotes = votesRes.data as Array<{ vote_hash: string }> | null;
+      if (votesRes.error || !allVotes || allVotes.length === 0) {
         toast.error("No cast votes available to anchor.");
         setIsAnchoring(false);
         return;
@@ -353,14 +425,14 @@ const toLocalDateString = (dateOrIso?: string | null) => {
       const root = tree.getRoot();
       const txHash = await simulateBlockchainTransaction();
 
-      const { error: anchorError } = await supabase
-        .from("block_anchors")
+      const { error: anchorError } = await (supabase
+        .from("block_anchors") as any)
         .insert({
           session_id: votingSession.id,
           merkle_root: root,
           vote_count: voteHashes.length,
-          started_at: votingSession.start_date,
-          ended_at: votingSession.end_date,
+          started_at: votingSession.voting_start || votingSession.start_date,
+          ended_at: votingSession.voting_end || votingSession.end_date,
           transaction_id: txHash,
           blockchain_network: "Polygon Amoy Testnet"
         });
@@ -403,68 +475,84 @@ const toLocalDateString = (dateOrIso?: string | null) => {
 
       const sessionPayload = {
         company_id: company.id,
-        title: sessionForm.title,
-        description: sessionForm.description,
+        title: sessionForm.title.trim(),
+        description: sessionForm.description?.trim() || null,
+        event_type: sessionForm.eventType,
+        voting_start: new Date(sessionForm.startDate).toISOString(),
+        voting_end: new Date(sessionForm.endDate).toISOString(),
         start_date: new Date(sessionForm.startDate).toISOString(),
         end_date: new Date(sessionForm.endDate).toISOString(),
+        meeting_date: sessionForm.meetingDate ? new Date(sessionForm.meetingDate).toISOString() : null,
+        meeting_end_date: sessionForm.meetingEndDate ? new Date(sessionForm.meetingEndDate).toISOString() : null,
+        meeting_start_date: sessionForm.meetingDate ? new Date(sessionForm.meetingDate).toISOString() : null,
+        notice_date: sessionForm.noticeDate ? new Date(sessionForm.noticeDate).toISOString() : null,
         meeting_link: sessionForm.meetingLink || null,
         meeting_password: sessionForm.meetingPassword || null,
         meeting_platform: sessionForm.meetingPlatform,
-        meeting_start_date: sessionForm.meetingStartDate ? new Date(sessionForm.meetingStartDate).toISOString() : null,
-        meeting_end_date: sessionForm.meetingEndDate ? new Date(sessionForm.meetingEndDate).toISOString() : null,
         voting_instructions: sessionForm.votingInstructions || null,
         record_date: sessionForm.recordDate,
-        is_active: true,
+        egm_requisition_type: sessionForm.eventType === "EGM" ? sessionForm.egmRequisitionType : null,
+        is_short_notice: sessionForm.eventType === "EGM" ? !!sessionForm.isShortNotice : false,
+        explanatory_statement_reference: sessionForm.eventType === "EGM" ? sessionForm.explanatoryStatementReference || null : null,
+        egm_reason: sessionForm.eventType === "EGM" ? sessionForm.egmReason || null : null,
+        status: votingSession?.status || "published",
+        is_active: (votingSession?.status || "published") === "open",
       };
 
       if (votingSession) {
-        const { error } = await supabase
-          .from("voting_sessions")
+        const { error } = await (supabase.from("voting_sessions") as any)
           .update(sessionPayload)
           .eq("id", votingSession.id);
 
         if (error) throw error;
-        toast.success("Voting session updated successfully.");
+        toast.success("Voting event updated successfully.");
+        await loadVotingSessions(company.id, votingSession.id);
       } else {
-        const { data, error } = await supabase
-          .from("voting_sessions")
+        const { data, error } = await (supabase.from("voting_sessions") as any)
           .insert(sessionPayload)
           .select()
           .single();
 
         if (error) throw error;
-        toast.success("Voting session created successfully.");
-        setVotingSession(data);
+        toast.success("Voting event created successfully.");
+        if (data) {
+          await loadVotingSessions(company.id, data.id);
+        }
       }
-
-      await loadVotingSession(company.id);
     } catch (err) {
       if (err instanceof z.ZodError) {
         toast.error(err.errors[0]?.message || "Validation failed");
       } else {
-        toast.error("Failed to save session settings.");
+        toast.error("Failed to save event settings.");
       }
     } finally {
       setIsSaving(false);
     }
   };
 
+  const handleTransitionStatus = async (newStatus: EventStatus) => {
+    if (!votingSession || !company) return;
+    try {
+      const { error } = await (supabase.from("voting_sessions") as any)
+        .update({ 
+          status: newStatus,
+          is_active: newStatus === "open"
+        })
+        .eq("id", votingSession.id);
+
+      if (error) throw error;
+      toast.success(`Event transitioned to ${newStatus.toUpperCase()}`);
+      await loadVotingSessions(company.id, votingSession.id);
+    } catch (err: unknown) {
+      toast.error(`Status transition failed: ${(err as Error).message}`);
+    }
+  };
+
   const handleToggleSessionActive = async () => {
     if (!votingSession) return;
-    const newStatus = !votingSession.is_active;
-
-    const { error } = await supabase
-      .from("voting_sessions")
-      .update({ is_active: newStatus })
-      .eq("id", votingSession.id);
-
-    if (error) {
-      toast.error("Failed to update status.");
-      return;
-    }
-
-    toast.success(`Session ${newStatus ? "activated" : "paused"}.`);
-    if (company) await loadVotingSession(company.id);
+    // Map toggle to authoritative lifecycle transition
+    const targetStatus: EventStatus = votingSession.status === "open" ? "closed" : "open";
+    await handleTransitionStatus(targetStatus);
   };
 
   const handleAddResolution = async (e: React.FormEvent) => {
@@ -478,7 +566,7 @@ const toLocalDateString = (dateOrIso?: string | null) => {
     try {
       resolutionSchema.parse(resolutionForm);
 
-      const { error } = await supabase.from("resolutions").insert({
+      const { error } = await (supabase.from("resolutions") as any).insert({
         voting_session_id: votingSession.id,
         title: resolutionForm.title.trim(),
         description: resolutionForm.description.trim(),
@@ -506,7 +594,7 @@ const toLocalDateString = (dateOrIso?: string | null) => {
   const handleDeleteResolution = async (id: string) => {
     if (!confirm("Are you sure you want to remove this resolution agenda?")) return;
 
-    const { error } = await supabase.from("resolutions").delete().eq("id", id);
+    const { error } = await (supabase.from("resolutions") as any).delete().eq("id", id);
     if (error) {
       toast.error("Failed to delete resolution.");
       return;
@@ -537,7 +625,7 @@ const toLocalDateString = (dateOrIso?: string | null) => {
         bio: nomineeForm.bio,
       });
 
-      const { error } = await supabase.from("nominees").insert({
+      const { error } = await (supabase.from("nominees") as any).insert({
         voting_session_id: votingSession.id,
         company_id: company.id,
         nominee_name: nomineeForm.name.trim(),
@@ -568,7 +656,7 @@ const toLocalDateString = (dateOrIso?: string | null) => {
   const handleDeleteNominee = async (id: string) => {
     if (!confirm("Are you sure you want to remove this candidate nominee?")) return;
 
-    const { error } = await supabase.from("nominees").delete().eq("id", id);
+    const { error } = await (supabase.from("nominees") as any).delete().eq("id", id);
     if (error) {
       toast.error("Failed to delete nominee.");
       return;
@@ -601,13 +689,13 @@ const toLocalDateString = (dateOrIso?: string | null) => {
 
       if (error) throw error;
 
-      await supabase
-        .from("voting_sessions")
+      await (supabase
+        .from("voting_sessions") as any)
         .update({ is_meeting_emails_sent: true })
         .eq("id", votingSession.id);
 
       toast.success("Meeting invites dispatched to all shareholders.");
-      if (company) await loadVotingSession(company.id);
+      if (company) await loadVotingSessions(company.id, votingSession.id);
     } catch (err) {
       console.error(err);
       toast.error("Failed to dispatch meeting invites.");
@@ -643,16 +731,25 @@ const toLocalDateString = (dateOrIso?: string | null) => {
   const getSessionStatus = () => {
     if (!votingSession) return { status: "Not Configured", color: "bg-slate-500/20 text-slate-300 border-slate-500/30" };
 
-    const now = new Date();
-    const start = new Date(votingSession.start_date);
-    const end = new Date(votingSession.end_date);
+    const statusMap: Record<string, { status: string; color: string }> = {
+      draft: { status: "Draft", color: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
+      published: { status: "Published (Pre-Voting)", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
+      open: { status: "Voting Open (Live)", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+      closed: { status: "Voting Closed", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+      results_finalized: { status: "Results Finalized", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
+      archived: { status: "Archived", color: "bg-gray-600/20 text-gray-400 border-gray-600/30" },
+    };
 
-    if (!votingSession.is_active) {
-      return { status: "Paused", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" };
+    if (votingSession.status && statusMap[votingSession.status]) {
+      return statusMap[votingSession.status];
     }
 
-    if (now < start) return { status: "Scheduled", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" };
-    if (now > end) return { status: "Concluded", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" };
+    const now = new Date();
+    const vStart = new Date(votingSession.voting_start || votingSession.start_date || now);
+    const vEnd = new Date(votingSession.voting_end || votingSession.end_date || now);
+
+    if (now < vStart) return { status: "Scheduled", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" };
+    if (now > vEnd) return { status: "Concluded", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" };
 
     return { status: "Live & Active", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" };
   };
@@ -666,8 +763,8 @@ const toLocalDateString = (dateOrIso?: string | null) => {
   return (
     <div className="min-h-screen relative bg-[#020817] text-white selection:bg-blue-500/30">
       <SEO
-        title="Session Operations & Governance Hub | Vote India Secure"
-        description="Configure general meeting resolutions, virtual meeting streams, and live scrutinizer tallies."
+        title="Voting Event & Governance Hub | Vote India Secure"
+        description="Configure AGM, EGM, and Postal Ballot resolutions, statutory schedules, virtual meeting streams, and live scrutinizer tallies."
         canonical="/voting-management"
         noindex={true}
       />
@@ -676,32 +773,79 @@ const toLocalDateString = (dateOrIso?: string | null) => {
       <main className="pt-28 pb-20">
         <div className="container mx-auto px-4 max-w-6xl">
           
-          {/* Header Bar */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8 p-6 rounded-3xl bg-[#0d1b2a]/90 border border-white/20 backdrop-blur-xl shadow-2xl">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/40 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-2.5 shadow-sm">
-                <Vote className="w-4 h-4 text-cyan-400" />
-                <span>Session Operations & Governance Hub</span>
+          {/* Header Bar with Event Switcher */}
+          <div className="flex flex-col gap-5 mb-8 p-6 rounded-3xl bg-[#0d1b2a]/90 border border-white/20 backdrop-blur-xl shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/40 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-2 shadow-sm">
+                  <Vote className="w-4 h-4 text-cyan-400" />
+                  <span>Voting Event & Governance Hub</span>
+                  {votingSession?.event_type && (
+                    <span className="ml-1 px-2 py-0.5 rounded bg-cyan-500/30 text-white font-extrabold text-[10px]">
+                      {votingSession.event_type}
+                    </span>
+                  )}
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  {votingSession?.title || "Create / Configure Voting Event"}
+                </h1>
+                <p className="text-slate-200 text-xs mt-1 font-medium leading-relaxed">
+                  Configure corporate voting events (AGM, EGM, Postal Ballot), legal notices, virtual streams, and live scrutinizer tallies.
+                </p>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-                {votingSession?.title || "Voting Session Management"}
-              </h1>
-              <p className="text-slate-100 text-sm mt-1.5 font-medium leading-relaxed">
-                Configure general meeting resolutions, virtual meeting streams, and live scrutinizer tallies.
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`px-3 py-1.5 rounded-full text-xs font-bold border ${sessionStatus.color}`}>
+                  {sessionStatus.status}
+                </span>
+                <Button 
+                  onClick={handleNewSession}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs gap-1.5 py-2 px-3.5 shadow-md"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  New Event
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate("/company-dashboard")}
+                  className="border-white/30 hover:bg-white/10 text-white rounded-xl text-xs font-bold px-3 py-2"
+                >
+                  Dashboard
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className={`px-3 py-1.5 rounded-full text-xs font-bold border ${sessionStatus.color}`}>
-                {sessionStatus.status}
-              </span>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate("/company-dashboard")}
-                className="border-white/30 hover:bg-white/10 text-white rounded-xl text-xs font-bold px-4 py-5"
-              >
-                Back to Dashboard
-              </Button>
-            </div>
+
+            {/* Event Switcher Selector Bar */}
+            {allSessions.length > 0 && (
+              <div className="pt-3 border-t border-white/10 flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mr-1">Events:</span>
+                {allSessions.map((s) => {
+                  const isCurrent = s.id === votingSession?.id;
+                  const typeColors: Record<string, string> = {
+                    AGM: "border-emerald-500/40 text-emerald-300 bg-emerald-500/10",
+                    EGM: "border-amber-500/40 text-amber-300 bg-amber-500/10",
+                    POSTAL_BALLOT: "border-blue-500/40 text-blue-300 bg-blue-500/10",
+                    GENERAL_MEETING: "border-slate-500/40 text-slate-300 bg-slate-500/10",
+                  };
+                  const colorClass = typeColors[s.event_type] || typeColors.GENERAL_MEETING;
+
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => company && loadVotingSessions(company.id, s.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
+                        isCurrent
+                          ? "bg-blue-600 text-white border-cyan-400 shadow-md ring-1 ring-cyan-400"
+                          : `${colorClass} hover:bg-white/10`
+                      }`}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-wider">{s.event_type}</span>
+                      <span className="truncate max-w-[150px] sm:max-w-[200px]">{s.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Main Navigation Tabs */}
@@ -852,23 +996,54 @@ const toLocalDateString = (dateOrIso?: string | null) => {
                 <CardHeader className="border-b border-white/15 pb-4">
                   <CardTitle className="text-xl font-black text-white flex items-center gap-2">
                     <CalendarDays className="w-5 h-5 text-cyan-400" />
-                    AGM & General Meeting Schedule
+                    Voting Event & Schedule Configuration
                   </CardTitle>
                   <CardDescription className="text-slate-100 font-normal">
-                    Set precise voting start and closing timestamps, statutory record date, and meeting title.
+                    Configure statutory meeting classification (AGM / EGM / Postal Ballot), Section 101/102 notices, and precise voting window timestamps.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <form onSubmit={handleCreateOrUpdateSession} className="space-y-6">
+                    {/* Event Type Classification */}
+                    <div className="space-y-3">
+                      <Label className="text-xs font-bold text-slate-100 flex items-center justify-between">
+                        <span>Event Type (Statutory Meeting / Ballot Classification)</span>
+                        <span className="text-[11px] text-cyan-400 font-semibold">Section 96, 100, 110 Compliance</span>
+                      </Label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {[
+                          { type: "AGM", label: "Annual General Meeting (AGM)", desc: "Sec 96 - Ordinary & Special business" },
+                          { type: "EGM", label: "Extraordinary General Meeting (EGM)", desc: "Sec 100 - Urgent & Special business" },
+                          { type: "POSTAL_BALLOT", label: "Postal Ballot", desc: "Sec 110 & Rule 22 - Remote e-voting only" },
+                          { type: "GENERAL_MEETING", label: "General Meeting", desc: "Class meeting / Creditors meeting" },
+                        ].map(opt => (
+                          <button
+                            key={opt.type}
+                            type="button"
+                            onClick={() => setSessionForm(prev => ({ ...prev, eventType: opt.type as EventType }))}
+                            className={`p-3 rounded-2xl border text-left transition-all ${
+                              sessionForm.eventType === opt.type
+                                ? "bg-blue-600/30 border-cyan-400 ring-2 ring-cyan-400/50 shadow-lg text-white"
+                                : "bg-black/40 border-white/15 text-slate-300 hover:border-white/30 hover:bg-white/5"
+                            }`}
+                          >
+                            <div className="text-xs font-black uppercase tracking-wider text-cyan-300 mb-1">{opt.type.replace('_', ' ')}</div>
+                            <div className="text-xs font-bold text-white leading-tight">{opt.label}</div>
+                            <div className="text-[10px] text-slate-400 mt-1 leading-snug">{opt.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="title" className="text-xs font-bold text-slate-100">General Meeting Title</Label>
+                        <Label htmlFor="title" className="text-xs font-bold text-slate-100">Voting Event Title</Label>
                         <Input
                           id="title"
                           name="title"
                           value={sessionForm.title}
                           onChange={handleSessionInputChange}
-                          placeholder="e.g. 105th Annual General Meeting (AGM)"
+                          placeholder={sessionForm.eventType === "EGM" ? "e.g. Extraordinary General Meeting (EGM) - Notice Ref: 2026/04" : "e.g. 105th Annual General Meeting (AGM)"}
                           className="bg-black/60 border-white/20 text-white rounded-xl font-medium"
                           required
                         />
@@ -881,14 +1056,141 @@ const toLocalDateString = (dateOrIso?: string | null) => {
                           name="description"
                           value={sessionForm.description}
                           onChange={handleSessionInputChange}
-                          placeholder="Provide context on resolutions, voting instructions, and agenda..."
+                          placeholder="Provide context on resolutions, voting instructions, and statutory notice references..."
                           className="bg-black/60 border-white/20 text-white rounded-xl font-medium"
                           rows={3}
                         />
                       </div>
+                    </div>
+
+                    {/* EGM Governance Section */}
+                    {sessionForm.eventType === "EGM" && (
+                      <div className="p-5 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-4">
+                        <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                          <AlertCircle className="w-4 h-4" />
+                          <span>Section 100 & 102 EGM Governance Parameters</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="egmRequisitionType" className="text-xs font-bold text-slate-100">
+                              Requisition Authority (Section 100)
+                            </Label>
+                            <Select
+                              value={sessionForm.egmRequisitionType}
+                              onValueChange={(val) => setSessionForm(prev => ({ ...prev, egmRequisitionType: val as EgmRequisitionType }))}
+                            >
+                              <SelectTrigger id="egmRequisitionType" className="bg-black/60 border-white/20 text-white rounded-xl font-bold">
+                                <SelectValue placeholder="Select requisition type" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-[#020817] border-white/20 text-white rounded-xl">
+                                <SelectItem value="BOARD_CONVENED">Board Convened (Section 100(1))</SelectItem>
+                                <SelectItem value="MEMBER_REQUISITION_SEC_100">On Members' Requisition (Section 100(2))</SelectItem>
+                                <SelectItem value="NCLT_DIRECTED">NCLT / Tribunal Directed (Section 98)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="explanatoryStatementReference" className="text-xs font-bold text-slate-100">
+                              Section 102 Explanatory Statement Reference
+                            </Label>
+                            <Input
+                              id="explanatoryStatementReference"
+                              name="explanatoryStatementReference"
+                              value={sessionForm.explanatoryStatementReference}
+                              onChange={handleSessionInputChange}
+                              placeholder="e.g. Annexure-II of Notice Ref EGM-2026-01"
+                              className="bg-black/60 border-white/20 text-white rounded-xl font-medium"
+                            />
+                          </div>
+
+                          <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="egmReason" className="text-xs font-bold text-slate-100">
+                              Statutory Reason / Matter for EGM Requisition
+                            </Label>
+                            <Textarea
+                              id="egmReason"
+                              name="egmReason"
+                              value={sessionForm.egmReason}
+                              onChange={handleSessionInputChange}
+                              placeholder="e.g. Urgent appointment of new statutory auditor / Approval of material related party transaction"
+                              className="bg-black/60 border-white/20 text-white rounded-xl font-medium"
+                              rows={2}
+                            />
+                          </div>
+
+                          <div className="md:col-span-2 p-3.5 rounded-xl bg-black/40 border border-amber-500/20 flex items-start gap-3">
+                            <Checkbox
+                              id="isShortNotice"
+                              checked={sessionForm.isShortNotice}
+                              onCheckedChange={(checked) => setSessionForm(prev => ({ ...prev, isShortNotice: !!checked }))}
+                              className="mt-1 border-amber-400/50 data-[state=checked]:bg-amber-500"
+                            />
+                            <div className="space-y-1">
+                              <Label htmlFor="isShortNotice" className="text-xs font-bold text-amber-200 cursor-pointer">
+                                Convened on Shorter Notice under Section 101(1) of Companies Act, 2013
+                              </Label>
+                              <p className="text-[11px] text-slate-300 leading-relaxed">
+                                Statutory requirement: For EGM, shorter notice requires consent of majority in number of members entitled to vote AND representing ≥95% of paid-up share capital with voting rights (or ≥95% total voting power for companies without share capital).
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Rule 20 Informational Callout */}
+                    <div className="p-4 rounded-2xl bg-blue-950/25 border border-cyan-500/30 flex items-start gap-3">
+                      <Info className="w-5 h-5 text-cyan-400 mt-0.5 shrink-0" />
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-cyan-200">Rule 20 Informational Assessment</p>
+                        <p className="text-[11px] text-slate-300 leading-relaxed">
+                          Under Rule 20 of Companies (Management and Administration) Rules, 2014, mandatory remote e-voting applies to listed companies and unlisted public companies with ≥ 1,000 shareholders (excluding NRE/SME exemptions). Verify current legal requirements and applicable exemptions with qualified legal counsel.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Canonical Timings Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="noticeDate" className="text-xs font-bold text-slate-100">Notice Dispatch Date (Sec 101)</Label>
+                        <Input
+                          id="noticeDate"
+                          name="noticeDate"
+                          type="date"
+                          value={sessionForm.noticeDate}
+                          onChange={handleSessionInputChange}
+                          className="bg-black/60 border-white/20 text-white rounded-xl font-medium"
+                        />
+                      </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="startDate" className="text-xs font-bold text-slate-100">Voting Window Start (UTC/Local)</Label>
+                        <Label htmlFor="meetingDate" className="text-xs font-bold text-slate-100">Meeting Commencement</Label>
+                        <Input
+                          id="meetingDate"
+                          name="meetingDate"
+                          type="datetime-local"
+                          value={sessionForm.meetingDate}
+                          onChange={handleSessionInputChange}
+                          className="bg-black/60 border-white/20 text-white rounded-xl font-medium"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="meetingEndDate" className="text-xs font-bold text-slate-100">Meeting Adjournment / End</Label>
+                        <Input
+                          id="meetingEndDate"
+                          name="meetingEndDate"
+                          type="datetime-local"
+                          value={sessionForm.meetingEndDate}
+                          onChange={handleSessionInputChange}
+                          className="bg-black/60 border-white/20 text-white rounded-xl font-medium"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="startDate" className="text-xs font-bold text-slate-100">Remote Voting Start (UTC/Local)</Label>
                         <Input
                           id="startDate"
                           name="startDate"
@@ -901,7 +1203,7 @@ const toLocalDateString = (dateOrIso?: string | null) => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="endDate" className="text-xs font-bold text-slate-100">Voting Window End / Cutoff</Label>
+                        <Label htmlFor="endDate" className="text-xs font-bold text-slate-100">Remote Voting Cutoff (UTC/Local)</Label>
                         <Input
                           id="endDate"
                           name="endDate"
@@ -1314,9 +1616,24 @@ const toLocalDateString = (dateOrIso?: string | null) => {
                               <h4 className="font-bold text-white text-base">{item.title}</h4>
                               <p className="text-xs text-slate-200 mt-0.5">{item.description}</p>
                             </div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${item.stats.for >= item.stats.against ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-rose-500/20 text-rose-300 border-rose-500/30"}`}>
-                              {item.stats.for >= item.stats.against ? "PASSED (ASSENT)" : "REJECTED"}
-                            </span>
+                            <div className="flex flex-col items-end gap-1">
+                              <span className={`px-3 py-1 rounded-full text-xs font-bold border ${item.stats.winner ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-rose-500/20 text-rose-300 border-rose-500/30"}`}>
+                                {item.stats.winner 
+                                  ? (item.resolution_type === 'special' 
+                                      ? "PASSED (SPECIAL RESOLUTION ≥75%)" 
+                                      : item.resolution_type === 'unanimous' 
+                                        ? "PASSED (UNANIMOUS 100%)" 
+                                        : "PASSED (ORDINARY MAJORITY >50%)")
+                                  : "REJECTED (FAILED STATUTORY THRESHOLD)"}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {item.resolution_type === 'special' 
+                                  ? "Sec 114(2): Assent ≥ 3x Dissent" 
+                                  : item.resolution_type === 'unanimous'
+                                    ? "100% Unanimous Assent"
+                                    : "Sec 114(1): Simple Majority"}
+                              </span>
+                            </div>
                           </div>
 
                           <div className="grid grid-cols-3 gap-4 text-center">

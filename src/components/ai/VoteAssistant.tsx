@@ -180,6 +180,7 @@ export const VoteAssistant: React.FC = () => {
         window.speechSynthesis.cancel();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -12,5 +12,6 @@
     "allowJs": true,
     "noUnusedLocals": false,
     "strictNullChecks": false
-  }
+  },
+  "exclude": ["node_modules", "dist", "supabase/functions"]
 }

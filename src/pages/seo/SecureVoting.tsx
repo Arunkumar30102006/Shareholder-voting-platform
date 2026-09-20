@@ -86,7 +86,7 @@ export const SecureVoting = () => {
             </h1>
 
             <p className="text-base sm:text-xl text-slate-200 max-w-3xl mx-auto font-normal leading-relaxed mb-10">
-              Discover the engineering behind tamper-evident corporate balloting. AES-256 ballot sealing, SHA-256 Merkle audit chains, PostgreSQL Row-Level Security, and multi-witness Scrutinizer unblocking protocols.
+              Discover the engineering behind tamper-evident corporate balloting. Cryptographic ballot integrity hashing, SHA-256 Merkle audit chains, PostgreSQL Row-Level Security, and multi-witness Scrutinizer unblocking protocols.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -124,9 +124,9 @@ export const SecureVoting = () => {
               <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-cyan-300 mb-2">
                 <Lock className="w-5 h-5 text-cyan-400" />
               </div>
-              <h3 className="text-lg font-bold text-white">1. AES-256 Ballot Encryption</h3>
+              <h3 className="text-lg font-bold text-white">1. SHA-256 Ballot Hashing &amp; Secrecy Preservation</h3>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                Ballots are encrypted with AES-256 at rest and in transit via TLS 1.3. Each vote payload is stored in an encrypted vault inaccessible to application operators prior to official unblocking.
+                Ballots are hashed with SHA-256 for cryptographic tamper evidence, protected in transit via TLS 1.3, and isolated in storage through PostgreSQL Row-Level Security so individual voter selections remain confidential until official unblocking.
               </p>
             </div>
 
@@ -144,9 +144,9 @@ export const SecureVoting = () => {
               <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300 mb-2">
                 <Fingerprint className="w-5 h-5 text-purple-400" />
               </div>
-              <h3 className="text-lg font-bold text-white">3. Multi-Factor Voter Authentication</h3>
+              <h3 className="text-lg font-bold text-white">3. Secure OTP Shareholder Authentication</h3>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                2FA OTP delivery combined with PAN, DP ID, and Client ID verification ensures only verified equity owners matching the official record date depository benpos can cast ballots.
+                Credential verification combined with time-sensitive keyed OTP delivery ensures only verified shareholders matching the official record date voter roster can access ballots.
               </p>
             </div>
 

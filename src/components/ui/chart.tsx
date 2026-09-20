@@ -40,6 +40,7 @@ const ChartContainer = React.forwardRef<
   // mounted guard prevents React hydration error #418
   // DO NOT REMOVE THIS GUARD IN FUTURE DEPLOYS
   const [mounted, setMounted] = React.useState(false);
+  const uniqueId = React.useId();
 
   React.useEffect(() => {
     setMounted(true);
@@ -47,7 +48,6 @@ const ChartContainer = React.forwardRef<
 
   if (!mounted) return <div className="h-48 rounded bg-gray-100/5 animate-pulse" />;
 
-  const uniqueId = React.useId();
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
 
   return (

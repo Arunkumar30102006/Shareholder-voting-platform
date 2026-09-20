@@ -3,7 +3,7 @@ import { SEO } from "@/components/layout/SEO";
 import { Lock, ChevronRight, Server, Shield, Database, Bell } from "lucide-react";
 
 const sections = [
-  { id: "encryption", title: "1. AES-256 Encryption Details" },
+  { id: "encryption", title: "1. Cryptographic & Storage Encryption" },
   { id: "localisation", title: "2. Data Localisation (India)" },
   { id: "retention", title: "3. Retention Policy" },
   { id: "breach-notification", title: "4. Breach Notification Process" },
@@ -81,15 +81,15 @@ export default function DataProtection() {
             <section id="encryption" className="mb-12 scroll-mt-28">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
                 <Shield className="w-6 h-6 text-emerald-400" />
-                1. AES-256 Encryption Details
+                1. Cryptographic &amp; Storage Encryption
               </h2>
               <p className="text-slate-300 leading-relaxed mb-4">
-                We employ Advanced Encryption Standard (AES) with 256-bit keys, which is the gold standard for enterprise data security, used by banks and military organizations globally.
+                We implement industry-standard cryptographic controls for data protection in transit and at rest.
               </p>
               <ul className="list-disc pl-6 text-slate-300 space-y-2">
-                <li><strong>Data at Rest:</strong> All databases, backups, and storage volumes are encrypted using AES-256. Cryptographic keys are managed via a dedicated Hardware Security Module (HSM).</li>
-                <li><strong>Data in Transit:</strong> All communications between your browser and our servers are encrypted using TLS 1.3 (Transport Layer Security) with perfect forward secrecy.</li>
-                <li><strong>Vote Hashes:</strong> Each cast vote undergoes SHA-256 hashing to generate a unique, irreversible digital signature, ensuring tamper evidence.</li>
+                <li><strong>Data at Rest:</strong> Database instances, automated backups, and storage volumes are encrypted at rest using managed cloud volume encryption (AWS KMS AES-256).</li>
+                <li><strong>Data in Transit:</strong> All communications between client browsers and edge application servers are encrypted using modern Transport Layer Security (TLS 1.3 supported) with strict HTTPS enforcement.</li>
+                <li><strong>Vote Hashes:</strong> Each cast vote undergoes SHA-256 hashing to generate an immutable digital digest linked to a verifiable Merkle audit ledger.</li>
               </ul>
             </section>
 

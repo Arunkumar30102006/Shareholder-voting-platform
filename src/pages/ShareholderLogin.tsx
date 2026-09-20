@@ -33,6 +33,7 @@ import {
 import { toast } from "sonner";
 import { env } from "@/config/env";
 import { useTranslation } from "react-i18next";
+import { votingApi } from "@/services/api/voting";
 import AnimatedOtpVerification, { VerifyResult } from "@/components/auth/AnimatedOtpVerification";
 import { createBreadcrumbSchema } from "@/components/layout/StructuredData";
 
@@ -51,6 +52,11 @@ export const ShareholderLogin = () => {
   const [loginStep, setLoginStep] = useState<"CREDENTIALS" | "OTP">("CREDENTIALS");
   const [maskedEmail, setMaskedEmail] = useState("");
   const [showHelpModal, setShowHelpModal] = useState(false);
+
+  // Secure Server Challenge State
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [lastIdentifier, setLastIdentifier] = useState<string>("");
+  const [lastPan, setLastPan] = useState<string>("");
 
   // Form State - Standard Credentials
   const [formData, setFormData] = useState({
@@ -136,53 +142,26 @@ export const ShareholderLogin = () => {
 
   // Handle Voting ID & Password Check
   const handleCredentialsSubmit = async () => {
-    const passwordHash = await hashPassword(formData.password);
+    const cleanId = formData.userId.trim();
+    const cleanPass = formData.password.trim();
 
-    const { data, error } = await supabase
-      .from("shareholders")
-      .select("*")
-      .eq("login_id", formData.userId.trim())
-      .eq("password_hash", passwordHash)
-      .maybeSingle();
-
-    if (error) {
-      toast.error("Authentication server error", {
-        description: "Unable to query depository register. Please try again.",
-      });
-      console.error("Login error:", error);
+    if (!cleanId || !cleanPass) {
+      toast.error("Please enter both User ID and Password");
       return;
     }
 
-    if (data) {
-      if (data.is_credential_used) {
-        toast.error("Credential Already Used", {
-          description: "This one-time voting token has already been exercised. Under Rule 20, duplicate votes are prohibited.",
-        });
-        return;
-      }
-
-      const email = data.email;
-      const name = data.shareholder_name || "Valued Shareholder";
-
-      if (!email) {
-        toast.error("No registered email on file", {
-          description: "Please contact your Company Secretary or RTA to update your registered email address.",
-        });
-        return;
-      }
-
-      setShareholderInfo({ id: data.id, email, name });
-
-      const [localPart, domain] = email.split("@");
-      const masked = localPart.length > 3 ? `${localPart.slice(0, 3)}...` : localPart;
-      setMaskedEmail(`${masked}@${domain}`);
-
-      // Dispatch 2FA OTP
-      await sendOtpTrigger(data.id, email, name, `${masked}@${domain}`);
-    } else {
-      toast.error("Invalid User ID or Password", {
-        description: "Check your AGM Notice email/SMS for your statutory Voting User ID and Security PIN.",
+    try {
+      const res = await votingApi.initiateAuth(cleanId, cleanPass);
+      setChallengeId(res.challenge_id);
+      setLastIdentifier(cleanId);
+      setLastPan(cleanPass);
+      setLoginStep("OTP");
+      toast.success("Security Passcode Dispatched", {
+        description: res.message,
       });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Authentication failed";
+      toast.error("Authentication Notice", { description: msg });
     }
   };
 
@@ -196,167 +175,61 @@ export const ShareholderLogin = () => {
       return;
     }
 
-    // Query matching shareholder record
-    const { data, error } = await supabase
-      .from("shareholders")
-      .select("*")
-      .or(`login_id.eq.${cleanDemat},shareholder_name.ilike.%${cleanDemat}%`)
-      .maybeSingle();
-
-    if (error) {
-      toast.error("Unable to match Benpos record");
-      return;
-    }
-
-    if (data) {
-      if (data.is_credential_used) {
-        toast.error("Ballot Already Submitted", {
-          description: "Your weighted voting entitlement for this meeting has already been recorded.",
-        });
-        return;
-      }
-
-      const email = data.email;
-      const name = data.shareholder_name || "Valued Shareholder";
-
-      if (!email) {
-        toast.error("No email associated with this Folio/Demat account.");
-        return;
-      }
-
-      setShareholderInfo({ id: data.id, email, name });
-
-      const [localPart, domain] = email.split("@");
-      const masked = localPart.length > 3 ? `${localPart.slice(0, 3)}...` : localPart;
-      setMaskedEmail(`${masked}@${domain}`);
-
-      await sendOtpTrigger(data.id, email, name, `${masked}@${domain}`);
-    } else {
-      // Fallback: If not found by direct match, provide clear guidance
-      toast.error("No matching shareholder found on cutoff date roster", {
-        description: "Please verify that your DP ID / Client ID matches your depository holding as on the statutory Record Date.",
-      });
-    }
-  };
-
-  // Dispatch OTP via Edge Function
-  const sendOtpTrigger = async (shareholderId: string, email: string, name: string, maskedStr: string) => {
     try {
-      const { error: fnError } = await supabase.functions.invoke("send-shareholder-otp-email", {
-        body: {
-          shareholder_id: shareholderId,
-          email: email,
-          name: name
-        },
-        headers: {
-          "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}`
-        }
-      });
-
-      if (fnError) {
-        throw fnError;
-      }
-
-      toast.success("Credentials Authenticated", {
-        description: `6-digit security code dispatched to ${maskedStr}`,
-      });
+      const res = await votingApi.initiateAuth(cleanDemat, cleanPan);
+      setChallengeId(res.challenge_id);
+      setLastIdentifier(cleanDemat);
+      setLastPan(cleanPan);
       setLoginStep("OTP");
+      toast.success("Security Passcode Dispatched", {
+        description: res.message,
+      });
     } catch (err: unknown) {
-      console.error("Failed to send OTP:", err);
-      toast.error("OTP Delivery Notice", {
-        description: "Credentials verified, but automated email delivery timed out. Please retry in a moment.",
-      });
-      // Allow proceeding to OTP screen to allow input if email received
-      setLoginStep("OTP");
+      const msg = err instanceof Error ? err.message : "Authentication failed";
+      toast.error("Authentication Notice", { description: msg });
     }
   };
 
-  // 2. Verify OTP
+  // 2. Verify OTP via secure server challenge
   const handleOtpVerify = async (enteredOtp: string): Promise<VerifyResult> => {
-    if (!shareholderInfo?.id) {
+    if (!challengeId) {
       return {
         success: false,
-        error: "Session expired. Please re-enter your credentials.",
+        error: "Session expired. Please enter your identification details again.",
       };
     }
 
     try {
-      const { data, error } = await supabase
-        .from("shareholders")
-        .select("otp_code, otp_expiry, id")
-        .eq("id", shareholderInfo.id)
-        .single();
-
-      if (error || !data) {
-        return {
-          success: false,
-          error: "Verification failed. Please try logging in again.",
-        };
-      }
-
-      // Check Expiry
-      if (!data.otp_expiry || new Date(data.otp_expiry) < new Date()) {
-        return {
-          success: false,
-          error: "Security code expired. Please click 'Resend Code'.",
-          isExpired: true,
-        };
-      }
-
-      const inputHash = await hashPassword(enteredOtp.trim());
-
-      // If OTP matches hash or matches demo code
-      if (inputHash === data.otp_code || enteredOtp.trim() === "123456") {
-        await supabase
-          .from("shareholders")
-          .update({
-            is_credential_used: true,
-            otp_code: null,
-            otp_expiry: null
-          })
-          .eq("id", shareholderInfo.id);
-
-        localStorage.setItem("shareholderId", shareholderInfo.id);
+      const res = await votingApi.verifyOtp(challengeId, enteredOtp.trim());
+      if (res.success) {
         return { success: true };
-      } else {
-        return {
-          success: false,
-          error: "Incorrect 6-digit verification code. Please check your inbox.",
-        };
       }
+      return {
+        success: false,
+        error: "Incorrect 6-digit verification code. Please check your inbox.",
+      };
     } catch (err: unknown) {
       console.error("OTP verification error:", err);
       return {
         success: false,
-        error: (err as Error).message || "An unexpected verification error occurred.",
+        error: (err as Error).message || "Passcode verification failed.",
       };
     }
   };
 
-  // Resend OTP Handler
+  // Resend OTP Handler via secure server challenge
   const handleOtpResend = async (): Promise<boolean> => {
-    if (!shareholderInfo) {
+    if (!lastIdentifier || !lastPan) {
       toast.error("Session expired. Please sign in again.");
       setLoginStep("CREDENTIALS");
       return false;
     }
 
     try {
-      const { error: fnError } = await supabase.functions.invoke("send-shareholder-otp-email", {
-        body: {
-          shareholder_id: shareholderInfo.id,
-          email: shareholderInfo.email,
-          name: shareholderInfo.name,
-        },
-        headers: {
-          "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}`
-        }
-      });
-
-      if (fnError) throw fnError;
-
+      const res = await votingApi.initiateAuth(lastIdentifier, lastPan);
+      setChallengeId(res.challenge_id);
       toast.success("Fresh Code Sent", {
-        description: `New OTP dispatched to ${maskedEmail}`,
+        description: res.message,
       });
       return true;
     } catch (err: unknown) {

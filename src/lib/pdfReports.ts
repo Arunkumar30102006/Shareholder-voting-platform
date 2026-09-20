@@ -86,16 +86,20 @@ export const generateScrutinizerAuditPDF = async (opts: ScrutinizerReportOptions
   const cinText = opts.company?.cin_number ? `CIN: ${opts.company.cin_number}` : "Corporate ID: Registered Entity";
   const panText = opts.company?.pan_number ? ` | Tax ID: ${opts.company.pan_number}` : "";
   doc.text(`${cinText}${panText}`, 14, 47);
-  doc.text(`General Meeting / AGM: ${opts.session?.title || "Annual General Meeting"}`, 14, 52);
+  doc.text(`Event: ${opts.session?.event_type ? `[${opts.session.event_type}] ` : ""}${opts.session?.title || "General Meeting"}`, 14, 52);
 
   // Voting Window
-  const startStr = opts.session?.start_date ? new Date(opts.session.start_date).toLocaleString() : "N/A";
-  const endStr = opts.session?.end_date ? new Date(opts.session.end_date).toLocaleString() : "N/A";
+  const startStr = (opts.session?.voting_start || opts.session?.start_date) ? new Date(opts.session.voting_start || opts.session.start_date!).toLocaleString() : "N/A";
+  const endStr = (opts.session?.voting_end || opts.session?.end_date) ? new Date(opts.session.voting_end || opts.session.end_date!).toLocaleString() : "N/A";
   doc.text(`Voting Window: ${startStr} to ${endStr}`, 14, 57);
 
   // 3. Executive KPI Summary Cards
   const totalVotesCast = opts.results.reduce((acc, r) => acc + r.stats.total, 0);
-  const passedCount = opts.results.filter(r => r.stats.for >= r.stats.against).length;
+  const passedCount = opts.results.filter(r => {
+    if (r.stats.winner !== undefined) return r.stats.winner;
+    const valid = r.stats.for + r.stats.against;
+    return r.resolution_type === "special" ? (valid > 0 && r.stats.for >= 3 * r.stats.against) : r.stats.for > r.stats.against;
+  }).length;
   const quorumStatus = "MET & COMPLIANT";
 
   doc.setFillColor(248, 250, 252);
@@ -105,23 +109,23 @@ export const generateScrutinizerAuditPDF = async (opts: ScrutinizerReportOptions
   const kpiY = 69;
   const colWidth = (pageWidth - 28) / 4;
 
-  // KPI 1: Eligible Shareholders
+  // KPI 1: Total Resolutions
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
   doc.setTextColor(slateText[0], slateText[1], slateText[2]);
-  doc.text("SHAREHOLDERS", 14 + 5, kpiY);
+  doc.text("TOTAL AGENDAS", 14 + 5, kpiY);
   doc.setFontSize(11);
   doc.setTextColor(primaryNavy[0], primaryNavy[1], primaryNavy[2]);
-  doc.text((opts.shareholderCount || 0).toLocaleString(), 14 + 5, kpiY + 7);
+  doc.text(opts.results.length.toString(), 14 + 5, kpiY + 7);
 
-  // KPI 2: Total Resolutions
+  // KPI 2: Passed Resolutions
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
   doc.setTextColor(slateText[0], slateText[1], slateText[2]);
-  doc.text("RESOLUTIONS", 14 + colWidth + 5, kpiY);
+  doc.text("PASSED STATUTORY", 14 + colWidth + 5, kpiY);
   doc.setFontSize(11);
-  doc.setTextColor(primaryNavy[0], primaryNavy[1], primaryNavy[2]);
-  doc.text(`${opts.results.length} (${passedCount} Passed)`, 14 + colWidth + 5, kpiY + 7);
+  doc.setTextColor(16, 185, 129); // Emerald
+  doc.text(passedCount.toString(), 14 + colWidth + 5, kpiY + 7);
 
   // KPI 3: Total Votes Cast
   doc.setFont("helvetica", "bold");
@@ -145,7 +149,12 @@ export const generateScrutinizerAuditPDF = async (opts: ScrutinizerReportOptions
   const tableData = opts.results.map((r, index) => {
     const total = r.stats.total || (r.stats.for + r.stats.against + r.stats.abstain) || 1;
     const approvalPct = total > 0 ? ((r.stats.for / total) * 100).toFixed(2) : "0.00";
-    const outcome = r.stats.for >= r.stats.against ? "PASSED" : "REJECTED";
+    const isPassed = r.stats.winner !== undefined
+      ? r.stats.winner
+      : (r.resolution_type === "special" ? (r.stats.for + r.stats.against > 0 && r.stats.for >= 3 * r.stats.against) : r.stats.for > r.stats.against);
+    const outcome = isPassed
+      ? (r.resolution_type === "special" ? "PASSED (SPECIAL ≥75%)" : "PASSED (ORDINARY)")
+      : "REJECTED";
 
     return [
       index + 1,

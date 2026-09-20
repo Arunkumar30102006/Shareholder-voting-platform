@@ -8,10 +8,10 @@ interface StatItem {
 }
 
 const stats: StatItem[] = [
-  { value: "<10s", label: "OTP Delivery & Auth Target", icon: Vote, color: "text-blue-400" },
-  { value: "256-Bit", label: "AES-256 Encryption Standard", icon: Building2, color: "text-amber-400" },
-  { value: "99.99%", label: "Cloud Architecture Uptime Target", icon: Activity, color: "text-emerald-400" },
-  { value: "100%", label: "SHA-256 Hash Verification", icon: ShieldCheck, color: "text-purple-400" },
+  { value: "SHA-256", label: "Cryptographic Ballot Integrity", icon: ShieldCheck, color: "text-emerald-400" },
+  { value: "Sec 108", label: "Companies Act Workflow Mapping", icon: Building2, color: "text-blue-400" },
+  { value: "MGT-13", label: "Aligned Scrutinizer Report Format", icon: Vote, color: "text-amber-400" },
+  { value: "OTP", label: "Secure Shareholder Authentication", icon: Activity, color: "text-cyan-400" },
 ];
 
 const StatCard = ({ stat }: { stat: StatItem }) => {

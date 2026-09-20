@@ -1,11 +1,11 @@
 import { ShieldCheck, Lock, Building2, Award, Globe } from "lucide-react";
 
 const badges = [
-  { label: "Corporate Governance Standards", icon: Globe, color: "text-blue-400" },
-  { label: "Enterprise Security Aligned", icon: Building2, color: "text-cyan-400" },
-  { label: "AES-256 Bit Encryption", icon: Lock, color: "text-emerald-400" },
-  { label: "SOC 2 Aligned Architecture", icon: ShieldCheck, color: "text-amber-400" },
-  { label: "ISO 27001 Aligned Architecture", icon: Award, color: "text-purple-400" },
+  { label: "SHA-256 Cryptographic Audit Ledger", icon: Lock, color: "text-emerald-400" },
+  { label: "Workflows Mapped to Sec 108 & Rule 20", icon: Globe, color: "text-blue-400" },
+  { label: "Form MGT-13 Aligned Scrutinizer Reports", icon: Award, color: "text-amber-400" },
+  { label: "PostgreSQL Row-Level Security", icon: ShieldCheck, color: "text-cyan-400" },
+  { label: "Dual-Witness Unblocking Workflow", icon: Building2, color: "text-purple-400" },
 ];
 
 const TrustBadgesRow = () => {

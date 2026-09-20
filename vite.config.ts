@@ -12,6 +12,43 @@ export default defineConfig(({ isSsrBuild }) => ({
     host: "0.0.0.0",
     port: 5173,
     strictPort: false,
+    proxy: {
+      "/api/auth/initiate": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: () => "/functions/v1/initiate-shareholder-auth",
+      },
+      "/api/auth/verify": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: () => "/functions/v1/verify-shareholder-otp",
+      },
+      "/api/auth/session": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: () => "/functions/v1/shareholder-session",
+      },
+      "/api/cast-vote": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: () => "/functions/v1/cast-vote",
+      },
+      "/api/eligible-events": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: () => "/functions/v1/eligible-events",
+      },
+      "/api/functions": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: (p: string) => p.replace(/^\/api\/functions/, "/functions/v1"),
+      },
+      "/supabase-proxy": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: (p: string) => p.replace(/^\/supabase-proxy/, ""),
+      },
+    },
   },
   plugins: [
     react(),
@@ -112,7 +149,19 @@ export default defineConfig(({ isSsrBuild }) => ({
         'benefits-electronic-voting-shareholders'
       ];
       const blogRoutes = blogSlugs.map(slug => `/blog/${slug}`);
-      return Array.from(new Set([...paths, ...blogRoutes]));
+
+      const resourceSlugs = [
+        'what-is-shareholder-e-voting',
+        'how-agm-e-voting-works',
+        'how-egm-e-voting-works',
+        'how-proxy-voting-works',
+        'record-date-and-voting-entitlement',
+        'ordinary-vs-special-resolution',
+        'scrutinizer-voting-workflow'
+      ];
+      const resourceRoutes = resourceSlugs.map(slug => `/resources/${slug}`);
+
+      return Array.from(new Set([...paths, ...blogRoutes, ...resourceRoutes]));
     },
   },
 }));

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/layout/Navbar";
@@ -123,87 +123,53 @@ const VotingDashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const shareholderId = typeof window !== 'undefined' ? localStorage.getItem("shareholderId") : null;
-
-  // 1. Fetch Shareholder Details
-  const { data: shareholder, isLoading: loadingShareholder } = useQuery({
-    queryKey: ["shareholder", shareholderId],
-    queryFn: () => {
-      if (!shareholderId) throw new Error("No shareholder ID");
-      return votingApi.getShareholder(shareholderId);
-    },
-    enabled: !!shareholderId,
+  // 1. Fetch Shareholder Details from HttpOnly Cookie Session
+  const { data: sessionAuth, isLoading: loadingAuth } = useQuery({
+    queryKey: ["shareholder-session"],
+    queryFn: () => votingApi.checkSession(),
   });
 
-  // 2. Fetch Active Session (Dependent on Shareholder)
-  const { data: session, isLoading: loadingSession } = useQuery({
-    queryKey: ["session", shareholder?.company_id],
-    queryFn: () => votingApi.getActiveSession(shareholder!.company_id),
-    enabled: !!shareholder?.company_id,
+  const shareholder = sessionAuth?.shareholder;
+  const shareholderId = shareholder?.id;
+
+  useEffect(() => {
+    if (!loadingAuth && sessionAuth && !sessionAuth.authenticated) {
+      navigate("/shareholder-login");
+    }
+  }, [loadingAuth, sessionAuth, navigate]);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const eventHint = searchParams.get("event");
+
+  // 2. Fetch Eligible Voting Events (Server-Authoritative via HttpOnly session)
+  const { data: eligibleEvents = [], isLoading: loadingEvents, error: eventsError } = useQuery({
+    queryKey: ["eligible-events"],
+    queryFn: () => votingApi.getEligibleEvents(),
+    enabled: !!sessionAuth?.authenticated,
   });
 
-  // 3. Parallel Fetch: Resolutions (with auto-sync for Nominees) & Existing Votes
-  const { data: resolutions, isLoading: loadingResolutions } = useQuery({
-    queryKey: ["resolutions", session?.id],
-    queryFn: async () => {
-      if (!session?.id) return [];
+  // Resolve active event from server-eligible list and URL navigation hint
+  const activeEventSummary = useMemo(() => {
+    if (!eligibleEvents.length) return null;
+    if (eventHint) {
+      const found = eligibleEvents.find(e => e.id === eventHint);
+      if (found) return found;
+    }
+    return eligibleEvents[0];
+  }, [eligibleEvents, eventHint]);
 
-      // 1. Fetch existing resolutions in database
-      const { data: existingResolutions, error } = await supabase
-        .from("resolutions")
-        .select("*")
-        .eq("voting_session_id", session.id)
-        .order("created_at", { ascending: true });
+  const activeSessionId = activeEventSummary?.id;
 
-      if (error) {
-        console.error("Error fetching resolutions:", error);
-        return [];
-      }
-
-      // 2. Fetch nominees for this session
-      const { data: sessionNominees } = await supabase
-        .from("nominees")
-        .select("*")
-        .eq("voting_session_id", session.id);
-
-      const allResolutions: Resolution[] = [...(existingResolutions || [])];
-
-      // 3. Ensure any nominee has a corresponding valid resolution in public.resolutions
-      if (sessionNominees && sessionNominees.length > 0) {
-        for (const nom of sessionNominees) {
-          const exists = allResolutions.find(r => 
-            r.resolution_type === "director_election" && 
-            r.title.includes(nom.nominee_name)
-          );
-
-          if (!exists) {
-            const desig = nom.designation ? `Proposed Designation: ${nom.designation}` : "Candidate for Board of Directors";
-            const exp = nom.experience_years ? ` | Experience: ${nom.experience_years} Years` : "";
-            const qual = nom.qualification ? ` | Qualification: ${nom.qualification}` : "";
-            const bio = nom.bio ? `\n${nom.bio}` : "";
-
-            const { data: newRes, error: insertErr } = await supabase
-              .from("resolutions")
-              .insert({
-                voting_session_id: session.id,
-                title: `Director Election: ${nom.nominee_name}`,
-                description: `${desig}${exp}${qual}${bio}`,
-                resolution_type: "director_election"
-              })
-              .select()
-              .single();
-
-            if (!insertErr && newRes) {
-              allResolutions.push(newRes as Resolution);
-            }
-          }
-        }
-      }
-
-      return allResolutions;
-    },
-    enabled: !!session?.id,
+  // 3. Fetch Event Details & Resolutions (Server-Authoritative)
+  const { data: eventDetail, isLoading: loadingDetail, error: detailError } = useQuery({
+    queryKey: ["event-detail", activeSessionId],
+    queryFn: () => votingApi.getEventDetails(activeSessionId!),
+    enabled: !!activeSessionId,
   });
+
+  // Canonical session alias & resolutions from server RPC
+  const session = eventDetail;
+  const resolutions = eventDetail?.resolutions || [];
 
   const { data: existingVotes, isLoading: loadingVotes } = useQuery({
     queryKey: ["votes", shareholderId],
@@ -211,7 +177,7 @@ const VotingDashboard = () => {
     enabled: !!shareholderId,
   });
 
-  // Live Countdown & Status
+  // Live Countdown & Status (using canonical timing fields)
   const [countdownText, setCountdownText] = useState<string>("");
   const [isLiveNow, setIsLiveNow] = useState(false);
 
@@ -220,8 +186,12 @@ const VotingDashboard = () => {
 
     const checkWindow = () => {
       const now = new Date().getTime();
-      const start = new Date(session.start_date).getTime();
-      const end = new Date(session.end_date).getTime();
+      const startStr = session.voting_start || session.start_date;
+      const endStr = session.voting_end || session.end_date;
+      if (!startStr || !endStr) return;
+
+      const start = new Date(startStr).getTime();
+      const end = new Date(endStr).getTime();
 
       if (now < start) {
         setIsLiveNow(false);
@@ -248,13 +218,17 @@ const VotingDashboard = () => {
     return () => clearInterval(interval);
   }, [session]);
 
-  // Real-time Status Sync: Automatically refetch session when start/end time is reached
+  // Real-time Status Sync: Automatically refetch event detail when start/end time is reached
   useEffect(() => {
-    if (!session || !shareholder?.company_id) return;
+    if (!session || !activeSessionId) return;
 
     const now = new Date();
-    const start = new Date(session.start_date);
-    const end = new Date(session.end_date);
+    const startStr = session.voting_start || session.start_date;
+    const endStr = session.voting_end || session.end_date;
+    if (!startStr || !endStr) return;
+
+    const start = new Date(startStr);
+    const end = new Date(endStr);
 
     let nextEvent: Date | null = null;
     if (now < start) nextEvent = start;
@@ -263,11 +237,12 @@ const VotingDashboard = () => {
     if (nextEvent) {
       const delay = nextEvent.getTime() - now.getTime() + 1000;
       const timer = setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["session", shareholder.company_id] });
+        queryClient.invalidateQueries({ queryKey: ["event-detail", activeSessionId] });
+        queryClient.invalidateQueries({ queryKey: ["eligible-events"] });
       }, delay);
       return () => clearTimeout(timer);
     }
-  }, [session, shareholder?.company_id, queryClient]);
+  }, [session, activeSessionId, queryClient]);
 
   // Proxy Delegation State
   const { data: delegation, refetch: refetchDelegation } = useQuery({
@@ -332,8 +307,8 @@ const VotingDashboard = () => {
     if (!shareholderId || !session?.id) return;
     setIsDelegating(true);
     try {
-      const { error } = await supabase
-        .from("proxy_delegations")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from("proxy_delegations") as any)
         .insert({
           delegator_id: shareholderId,
           proxy_id: proxyId,
@@ -350,7 +325,7 @@ const VotingDashboard = () => {
     }
   };
 
-  const isLoading = loadingShareholder || loadingSession || loadingResolutions || loadingVotes;
+  const isLoading = loadingAuth || loadingEvents || (!!activeSessionId && loadingDetail) || loadingVotes;
 
   // Process Data for UI: All items have a real, guaranteed resolution_id in PostgreSQL
   const votingItems: VotingItem[] = useMemo(() => {
@@ -376,7 +351,7 @@ const VotingDashboard = () => {
         voted: !!voteRecord,
         vote: voteValue,
         voteHash: voteRecord?.vote_hash,
-        anchorRoot: anchorData?.merkle_root
+        anchorRoot: anchorData ? (anchorData as { merkle_root?: string }).merkle_root : undefined
       };
     }) || [];
   }, [resolutions, existingVotes, anchorData]);
@@ -448,24 +423,12 @@ const VotingDashboard = () => {
     queryClient.setQueryData(["votes", shareholderId], (old: VoteRecord[] | undefined) => [...(old || []), newVote]);
 
     try {
-      // 1. Primary Vote (Voter themselves)
-      await votingApi.castVote(shareholderId, itemId, upperVoteType, voteHash);
-
-      // 2. Delegate Votes (Votes on behalf of others)
-      if (myDelegators && myDelegators.length > 0) {
-        for (const d of myDelegators) {
-          try {
-            const dHash = await generateVoteHash(d.delegator_id, itemId, voteType, timestamp);
-            await votingApi.castVote(d.delegator_id, itemId, upperVoteType, dHash);
-          } catch (err) {
-            console.error(`Failed to cast proxy vote for ${d.delegator_id}:`, err);
-          }
-        }
-      }
+      await votingApi.castVote(itemId, upperVoteType);
 
       toast.success("Vote securely recorded!", {
-        description: `Your vote has been cryptographically hashed and anchored.`,
+        description: "Your vote has been cryptographically recorded on the record date roster.",
       });
+      queryClient.invalidateQueries({ queryKey: ["votes"] });
     } catch (e: unknown) {
       console.error("Error recording vote:", e);
       toast.error(`Vote Failed: ${(e as Error).message}`);
@@ -473,7 +436,7 @@ const VotingDashboard = () => {
         old?.filter((v) => v.vote_hash !== voteHash) || []
       );
     }
-  }, [isSessionStarted, isSessionExpired, isSessionActive, votingItems, myDelegators, shareholderId, queryClient]);
+  }, [isSessionStarted, isSessionExpired, isSessionActive, votingItems, shareholderId, queryClient]);
 
   if (!shareholderId) {
     if (typeof window !== 'undefined') {
@@ -556,6 +519,120 @@ const VotingDashboard = () => {
             </div>
           </div>
 
+          {/* Event Inaccessible Alert */}
+          {detailError && (
+            <div className="mb-8 p-6 rounded-3xl bg-rose-950/40 border border-rose-500/40 shadow-xl text-center">
+              <AlertCircle className="w-10 h-10 text-rose-400 mx-auto mb-2" />
+              <h3 className="text-lg font-bold text-white">Event Ballot Inaccessible</h3>
+              <p className="text-xs text-slate-300 max-w-md mx-auto mt-1">
+                You are not enrolled on the record-date roster for this voting event, or the voting event is not currently active.
+              </p>
+              {eligibleEvents.length > 0 && (
+                <Button
+                  onClick={() => setSearchParams({ event: eligibleEvents[0].id || eligibleEvents[0].session_id })}
+                  className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs"
+                >
+                  View Eligible Event: {eligibleEvents[0].title}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Event Switcher Bar */}
+          {eligibleEvents.length > 0 && (
+            <div className="mb-6 p-4 rounded-3xl bg-[#0d1b2a]/95 border border-white/20 backdrop-blur-xl shadow-xl">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
+                  <Layers className="w-4 h-4 text-cyan-400" />
+                  <span>Your Enrolled Voting Events ({eligibleEvents.length})</span>
+                </div>
+                <span className="text-[11px] text-slate-400">Server verified via record-date roster</span>
+              </div>
+              <div className="flex flex-wrap gap-2.5">
+                {eligibleEvents.map(evt => {
+                  const isCurrent = evt.id === activeSessionId || evt.session_id === activeSessionId;
+                  const typeColors: Record<string, string> = {
+                    AGM: "border-emerald-500/40 text-emerald-300 bg-emerald-500/10",
+                    EGM: "border-amber-500/40 text-amber-300 bg-amber-500/10",
+                    POSTAL_BALLOT: "border-blue-500/40 text-blue-300 bg-blue-500/10",
+                    GENERAL_MEETING: "border-slate-500/40 text-slate-300 bg-slate-500/10",
+                  };
+                  const color = typeColors[evt.event_type] || typeColors.GENERAL_MEETING;
+
+                  return (
+                    <button
+                      key={evt.id || evt.session_id}
+                      type="button"
+                      onClick={() => setSearchParams({ event: evt.id || evt.session_id })}
+                      className={`px-3.5 py-2 rounded-2xl text-xs font-bold border transition-all flex items-center gap-2 ${
+                        isCurrent
+                          ? "bg-blue-600 text-white border-cyan-400 shadow-lg ring-2 ring-cyan-400/50"
+                          : `${color} hover:bg-white/10 hover:border-white/30`
+                      }`}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/40 border border-white/10">
+                        {evt.event_type}
+                      </span>
+                      <span className="truncate max-w-[200px]">{evt.title}</span>
+                      <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full ${
+                        evt.status === "open" ? "bg-emerald-500/30 text-emerald-200" : "bg-slate-500/30 text-slate-300"
+                      }`}>
+                        {evt.status}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Proxy Representation Active Banner */}
+          {myDelegators && myDelegators.length > 0 && (
+            <div className="mb-6 p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/40 flex items-center gap-3">
+              <ShieldCheck className="w-5 h-5 text-indigo-300 shrink-0" />
+              <div className="text-xs text-indigo-200">
+                <span className="font-bold text-white">Proxy Representation Active: </span>
+                You are casting ballots on behalf of{" "}
+                {myDelegators.map((d: { id: string; delegator?: { shareholder_name?: string; email?: string } }, i: number) => (
+                  <span key={d.id} className="font-bold text-white">
+                    {d.delegator?.shareholder_name} ({d.delegator?.email})
+                    {i < myDelegators.length - 1 ? ", " : ""}
+                  </span>
+                ))}{" "}
+                under verified proxy authorization (Companies Act Section 105).
+              </div>
+            </div>
+          )}
+
+          {/* EGM Governance Details Banner */}
+          {session?.event_type === "EGM" && (
+            <div className="mb-6 p-4 rounded-2xl bg-amber-950/30 border border-amber-500/30 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-1 text-xs text-slate-200">
+                <div className="font-bold text-amber-300 flex items-center gap-2">
+                  <span>Extraordinary General Meeting (EGM) Governance Notice</span>
+                  {session.is_short_notice && (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/40">
+                      Section 101(1) Shorter Notice
+                    </span>
+                  )}
+                </div>
+                {session.egm_reason && (
+                  <p className="text-slate-300">
+                    <span className="font-bold text-white">Requisition Matter: </span>
+                    {session.egm_reason}
+                  </p>
+                )}
+                {session.explanatory_statement_reference && (
+                  <p className="text-slate-300">
+                    <span className="font-bold text-white">Section 102 Explanatory Statement: </span>
+                    {session.explanatory_statement_reference}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Voting Window Live Countdown & Status Banner */}
           {session && (
             <div className="mb-8">
@@ -633,10 +710,10 @@ const VotingDashboard = () => {
                         Live Virtual General Meeting Room
                       </h3>
                       <div className="space-y-1 text-sm text-slate-200 font-medium">
-                        {session.meeting_start_date && (
+                        {session.meeting_date && (
                           <p className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-cyan-400" />
-                            {new Date(session.meeting_start_date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                            {new Date(session.meeting_date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                           </p>
                         )}
                         {session.meeting_password && (
