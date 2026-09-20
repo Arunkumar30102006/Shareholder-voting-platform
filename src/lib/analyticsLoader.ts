@@ -13,7 +13,10 @@ declare global {
 }
 
 const CONSENT_STORAGE_KEY = "vote_india_analytics_consent";
-const GTM_ID = "GTM-5PWZGCBR";
+const MEASUREMENT_ID =
+  import.meta.env.VITE_GA_MEASUREMENT_ID ||
+  import.meta.env.VITE_GTM_ID ||
+  "GTM-5PWZGCBR";
 
 export function getAnalyticsConsent(): boolean | null {
   if (typeof window === "undefined") return null;
@@ -43,7 +46,7 @@ export function setAnalyticsConsent(granted: boolean): void {
 let isLoaded = false;
 
 export function loadAnalytics(): void {
-  if (typeof window === "undefined" || isLoaded) return;
+  if (typeof window === "undefined" || isLoaded || !MEASUREMENT_ID) return;
 
   // Defer script injection until the browser is idle to safeguard Core Web Vitals
   const inject = () => {
@@ -57,15 +60,20 @@ export function loadAnalytics(): void {
     };
 
     window.gtag("js", new Date());
-    window.gtag("config", GTM_ID, {
+    window.gtag("config", MEASUREMENT_ID, {
       anonymize_ip: true,
       send_page_view: true,
       restricted_data_processing: true,
     });
 
+    const isGA4 = MEASUREMENT_ID.startsWith("G-");
+    const scriptSrc = isGA4
+      ? `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`
+      : `https://www.googletagmanager.com/gtm.js?id=${MEASUREMENT_ID}`;
+
     const script = document.createElement("script");
     script.async = true;
-    script.src = `https://www.googletagmanager.com/gtm.js?id=${GTM_ID}`;
+    script.src = scriptSrc;
     script.onerror = () => {
       console.warn("Analytics script failed to load (e.g. ad-blocker enabled)");
     };
