@@ -183,6 +183,8 @@ DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON public.vot
 DROP POLICY IF EXISTS "Enable read access for all users" ON public.votes;
 DROP POLICY IF EXISTS "Shareholders can cast their own vote" ON public.votes;
 DROP POLICY IF EXISTS "Shareholders see only their own votes" ON public.votes;
+DROP POLICY IF EXISTS "Service role manages votes" ON public.votes;
+DROP POLICY IF EXISTS "Company admins view company session votes" ON public.votes;
 
 -- Service role full access to votes
 CREATE POLICY "Service role manages votes" ON public.votes
@@ -206,6 +208,9 @@ ALTER TABLE public.company_admins ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow public registration of admins" ON public.company_admins;
 DROP POLICY IF EXISTS "Admins can view their own record" ON public.company_admins;
 DROP POLICY IF EXISTS "Admins can update their own record" ON public.company_admins;
+DROP POLICY IF EXISTS "Service role manages company_admins" ON public.company_admins;
+DROP POLICY IF EXISTS "Admins view own record" ON public.company_admins;
+DROP POLICY IF EXISTS "Admins update own record" ON public.company_admins;
 
 CREATE POLICY "Service role manages company_admins" ON public.company_admins
 FOR ALL TO service_role USING (true) WITH CHECK (true);
@@ -224,6 +229,9 @@ ALTER TABLE public.companies ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow public registration of companies" ON public.companies;
 DROP POLICY IF EXISTS "Admins can view their company" ON public.companies;
 DROP POLICY IF EXISTS "Admins can update their company" ON public.companies;
+DROP POLICY IF EXISTS "Service role manages companies" ON public.companies;
+DROP POLICY IF EXISTS "Admins view own company" ON public.companies;
+DROP POLICY IF EXISTS "Admins update own company" ON public.companies;
 
 CREATE POLICY "Service role manages companies" ON public.companies
 FOR ALL TO service_role USING (true) WITH CHECK (true);
@@ -252,6 +260,8 @@ USING (
 ALTER TABLE public.shareholders ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow public read of shareholders" ON public.shareholders;
 DROP POLICY IF EXISTS "Enable read access for all users" ON public.shareholders;
+DROP POLICY IF EXISTS "Service role manages shareholders" ON public.shareholders;
+DROP POLICY IF EXISTS "Company admins view company shareholders" ON public.shareholders;
 
 CREATE POLICY "Service role manages shareholders" ON public.shareholders
 FOR ALL TO service_role USING (true) WITH CHECK (true);
@@ -270,6 +280,7 @@ USING (
 ALTER TABLE public.verification_codes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow public access to verification_codes" ON public.verification_codes;
 DROP POLICY IF EXISTS "Enable all access for verification_codes" ON public.verification_codes;
+DROP POLICY IF EXISTS "Service role manages verification_codes" ON public.verification_codes;
 
 CREATE POLICY "Service role manages verification_codes" ON public.verification_codes
 FOR ALL TO service_role USING (true) WITH CHECK (true);
