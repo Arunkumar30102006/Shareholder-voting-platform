@@ -73,8 +73,8 @@ const CompanyLogin = () => {
 
       if (data.user) {
         // Check if user is a company admin
-        const { data: adminData, error: adminError } = await supabase
-          .from("company_admins")
+        const { data: adminData, error: adminError } = await (supabase
+          .from("company_admins") as any)
           .select("company_id")
           .eq("user_id", data.user.id)
           .maybeSingle();
@@ -87,11 +87,11 @@ const CompanyLogin = () => {
         }
 
         // Fetch company name for the email
-        const { data: companyData } = await supabase
-          .from("companies")
+        const { data: companyData } = await (supabase
+          .from("companies") as any)
           .select("company_name")
           .eq("id", adminData.company_id)
-          .single();
+          .maybeSingle();
 
         const cName = companyData?.company_name || "Vote India Secure";
         setCompanyName(cName);
@@ -107,14 +107,14 @@ const CompanyLogin = () => {
             email: validatedData.email,
             companyName: cName,
             otp: newOtp
-          },
-          headers: {
-            "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}`
           }
         });
 
         if (emailError) {
-          toast.error("Failed to send OTP email. Please try again.");
+          console.error("OTP send error:", emailError);
+          toast.error("Failed to send 2FA OTP email.", {
+            description: "Please ensure RESEND_API_KEY secret is configured in your Supabase Edge Functions environment."
+          });
           await supabase.auth.signOut();
           setIsLoading(false);
           return;
@@ -173,9 +173,6 @@ const CompanyLogin = () => {
           email: formData.email,
           companyName: companyName || "Vote India Secure",
           otp: newOtp
-        },
-        headers: {
-          "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}`
         }
       });
 
@@ -261,6 +258,7 @@ const CompanyLogin = () => {
                             id="email"
                             name="email"
                             type="email"
+                            autoComplete="username"
                             value={formData.email}
                             onChange={handleInputChange}
                             placeholder={t("company_login_email_ph")}
@@ -282,6 +280,7 @@ const CompanyLogin = () => {
                             id="password"
                             name="password"
                             type={showPassword ? "text" : "password"}
+                            autoComplete="current-password"
                             value={formData.password}
                             onChange={handleInputChange}
                             placeholder={t("company_login_password_ph")}
