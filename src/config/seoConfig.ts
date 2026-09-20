@@ -163,8 +163,8 @@ export const SEO_CONFIG: Record<string, RouteSEOConfig> = {
     contentUpdatedAt: '2026-09-20',
   },
   '/resources': {
-    title: 'Shareholder E-Voting Resources & Guides | Vote India Secure',
-    description: 'Statutory guides, operational walkthroughs, and legal analyses for corporate secretarial teams, scrutinizers, and institutional shareholders.',
+    title: 'Shareholder E-Voting Resources & Compliance Guides | Vote India Secure',
+    description: 'Statutory guides, SEBI LODR Regulation 44 rules, Section 108 timelines, and Form MGT-13 scrutinizer workflows for corporate secretarial teams and auditors.',
     canonical: `${SITE_URL}/resources`,
     h1: 'Statutory E-Voting Knowledge Base & Resources',
     ogType: 'website',

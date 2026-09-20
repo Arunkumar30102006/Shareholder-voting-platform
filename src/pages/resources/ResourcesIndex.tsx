@@ -1,13 +1,34 @@
 import { Link } from "react-router-dom";
 import { SEO } from "@/components/layout/SEO";
-import { createBreadcrumbSchema } from "@/components/layout/StructuredData";
+import { createBreadcrumbSchema, createFaqSchema } from "@/components/layout/StructuredData";
 import { RESOURCE_ARTICLES } from "./articlesData";
 import { BookOpen, ArrowRight, Clock, Calendar, Scale, ShieldCheck } from "lucide-react";
+
+const STATUTORY_FAQS = [
+  {
+    question: "Is e-voting mandatory for shareholders in India under SEBI LODR Regulation 44 and Companies Act Section 108?",
+    answer: "Yes. Under Section 108 of the Companies Act, 2013 (Rule 20 of Companies Management Rules, 2014) and Regulation 44 of SEBI LODR, every company listed on a recognized stock exchange and unlisted public companies having 1,000 or more shareholders must provide electronic voting facilities for general meeting resolutions."
+  },
+  {
+    question: "Within how many days must a Scrutinizer submit Form MGT-13 report after general meeting conclusion?",
+    answer: "Under Rule 20(4)(xii) of the Companies (Management and Administration) Rules, 2014, the independent Scrutinizer must unblock the remote votes before two witnesses and submit the consolidated voting report to the Chairman within 3 working days from the conclusion of the general meeting."
+  },
+  {
+    question: "What is the key statutory difference between an Ordinary and Special Resolution under Section 114?",
+    answer: "Under Section 114 of the Companies Act 2013, an Ordinary Resolution requires a simple majority (Assent Votes > Dissent Votes), whereas a Special Resolution requires a 3x supermajority where votes cast in favor must equal at least three times the votes cast against (Assent Votes >= 3 x Dissent Votes)."
+  },
+  {
+    question: "How is the statutory cut-off date (record date) determined for shareholder voting entitlement?",
+    answer: "Under Rule 20(4)(vii), entitlement to vote by remote e-voting or at the meeting is frozen as of the cut-off date, which cannot be earlier than seven (7) days before the general meeting. Voting rights are proportionate to paid-up share capital held on that cut-off date."
+  }
+];
 
 const breadcrumbSchema = createBreadcrumbSchema([
   { name: "Home", url: "/" },
   { name: "Resources", url: "/resources" }
 ]);
+
+const faqSchema = createFaqSchema(STATUTORY_FAQS);
 
 export default function ResourcesIndex() {
   const articles = Object.values(RESOURCE_ARTICLES);
@@ -15,10 +36,10 @@ export default function ResourcesIndex() {
   return (
     <div className="min-h-screen bg-[#020817] text-white selection:bg-blue-500/30">
       <SEO
-        title="Shareholder E-Voting Resources & Guides | Vote India Secure"
-        description="Statutory guides, operational walkthroughs, and legal analyses for corporate secretarial teams, scrutinizers, and institutional shareholders."
+        title="Shareholder E-Voting Resources & Compliance Guides | Vote India Secure"
+        description="Statutory guides, SEBI LODR Regulation 44 rules, Section 108 timelines, and Form MGT-13 scrutinizer workflows for corporate secretarial teams and auditors."
         canonical="/resources"
-        schemas={[breadcrumbSchema]}
+        schemas={[breadcrumbSchema, faqSchema]}
       />
 
       {/* Hero Section */}
@@ -88,6 +109,39 @@ export default function ResourcesIndex() {
                   </Link>
                 </div>
               </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Statutory FAQs Section targeting Top Search Queries */}
+      <section className="py-16 bg-[#091322] border-t border-white/10">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="text-center mb-12">
+            <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 text-xs font-semibold uppercase tracking-wider">
+              Frequently Asked Compliance Questions
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mt-3">
+              Statutory E-Voting &amp; SEBI LODR Regulation 44 FAQs
+            </h2>
+            <p className="text-slate-400 text-xs sm:text-sm mt-2">
+              Authoritative answers to common statutory queries regarding Section 108, SEBI Regulation 44, and Scrutinizer timelines.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {STATUTORY_FAQS.map((faq, idx) => (
+              <div
+                key={idx}
+                className="p-5 sm:p-6 rounded-2xl bg-[#0d1b2a]/80 border border-white/10 backdrop-blur-md"
+              >
+                <h3 className="text-base sm:text-lg font-bold text-white mb-2 flex items-start gap-2">
+                  <span className="text-cyan-400">Q:</span> {faq.question}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-6">
+                  {faq.answer}
+                </p>
+              </div>
             ))}
           </div>
         </div>
