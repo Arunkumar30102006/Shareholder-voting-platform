@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { SEO } from "@/components/layout/SEO";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,14 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import {
   CalendarDays,
-  Clock,
   Users,
   UserPlus,
   Video,
@@ -32,28 +27,21 @@ import {
   Loader2,
   Plus,
   Trash2,
-  Building2,
   Vote,
   Shield,
   Info,
   ExternalLink,
   Trophy,
-  Lock,
   Download,
-  Share2,
-  ShieldCheck,
-  TrendingUp,
   Sparkles,
   Layers,
   FileCheck2
 } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { env } from "@/config/env";
 import { z } from "zod";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { useTranslation } from "react-i18next";
 import { MerkleTree } from "@/lib/merkle";
 import { simulateBlockchainTransaction } from "@/lib/blockchain";
 import { Nominee, VotingSession, ResolutionResult, AnchorData, Company, Shareholder, Resolution, EventType, EgmRequisitionType, EventStatus } from "@/types";
@@ -95,7 +83,6 @@ const sessionSchema = z.object({
 
 const VotingManagement = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingEmails, setIsSendingEmails] = useState(false);
@@ -247,7 +234,7 @@ const toLocalDateString = (dateOrIso?: string | null) => {
         endDate: toLocalInputString(selected.voting_end || selected.end_date),
         meetingDate: toLocalInputString(selected.meeting_date || (selected as unknown as { meeting_start_date?: string }).meeting_start_date),
         meetingEndDate: toLocalInputString(selected.meeting_end_date),
-        noticeDate: toLocalInputString(selected.notice_date),
+        noticeDate: toLocalDateString(selected.notice_date),
         meetingLink: selected.meeting_link || "",
         meetingPassword: selected.meeting_password || "",
         meetingPlatform: selected.meeting_platform || "zoom",
@@ -473,31 +460,31 @@ const toLocalDateString = (dateOrIso?: string | null) => {
     try {
       sessionSchema.parse(sessionForm);
 
-      const sessionPayload = {
+      const sessionPayload: Record<string, unknown> = {
         company_id: company.id,
         title: sessionForm.title.trim(),
         description: sessionForm.description?.trim() || null,
         event_type: sessionForm.eventType,
         voting_start: new Date(sessionForm.startDate).toISOString(),
         voting_end: new Date(sessionForm.endDate).toISOString(),
-        start_date: new Date(sessionForm.startDate).toISOString(),
-        end_date: new Date(sessionForm.endDate).toISOString(),
         meeting_date: sessionForm.meetingDate ? new Date(sessionForm.meetingDate).toISOString() : null,
         meeting_end_date: sessionForm.meetingEndDate ? new Date(sessionForm.meetingEndDate).toISOString() : null,
-        meeting_start_date: sessionForm.meetingDate ? new Date(sessionForm.meetingDate).toISOString() : null,
-        notice_date: sessionForm.noticeDate ? new Date(sessionForm.noticeDate).toISOString() : null,
+        notice_date: sessionForm.noticeDate ? new Date(sessionForm.noticeDate + "T00:00:00").toISOString() : null,
         meeting_link: sessionForm.meetingLink || null,
         meeting_password: sessionForm.meetingPassword || null,
         meeting_platform: sessionForm.meetingPlatform,
         voting_instructions: sessionForm.votingInstructions || null,
-        record_date: sessionForm.recordDate,
+        record_date: sessionForm.recordDate ? new Date(sessionForm.recordDate + "T00:00:00").toISOString() : null,
         egm_requisition_type: sessionForm.eventType === "EGM" ? sessionForm.egmRequisitionType : null,
         is_short_notice: sessionForm.eventType === "EGM" ? !!sessionForm.isShortNotice : false,
         explanatory_statement_reference: sessionForm.eventType === "EGM" ? sessionForm.explanatoryStatementReference || null : null,
         egm_reason: sessionForm.eventType === "EGM" ? sessionForm.egmReason || null : null,
-        status: votingSession?.status || "published",
-        is_active: (votingSession?.status || "published") === "open",
       };
+
+      // Only set status for new sessions (start at draft); omit for updates to avoid strict state machine trigger conflicts
+      if (!votingSession) {
+        sessionPayload.status = "draft";
+      }
 
       if (votingSession) {
         const { error } = await (supabase.from("voting_sessions") as any)
@@ -523,7 +510,9 @@ const toLocalDateString = (dateOrIso?: string | null) => {
       if (err instanceof z.ZodError) {
         toast.error(err.errors[0]?.message || "Validation failed");
       } else {
-        toast.error("Failed to save event settings.");
+        const errMsg = (err as Error)?.message || "Unknown error";
+        console.error("Save event error:", err);
+        toast.error(`Failed to save event settings: ${errMsg}`);
       }
     } finally {
       setIsSaving(false);
@@ -548,11 +537,23 @@ const toLocalDateString = (dateOrIso?: string | null) => {
     }
   };
 
-  const handleToggleSessionActive = async () => {
-    if (!votingSession) return;
-    // Map toggle to authoritative lifecycle transition
-    const targetStatus: EventStatus = votingSession.status === "open" ? "closed" : "open";
-    await handleTransitionStatus(targetStatus);
+  // Lifecycle-aware next status transitions (strict state machine)
+  const getNextTransition = (): { label: string; targetStatus: EventStatus; icon: "publish" | "play" | "pause" | "check" | "archive" } | null => {
+    if (!votingSession) return null;
+    const transitions: Record<string, { label: string; targetStatus: EventStatus; icon: "publish" | "play" | "pause" | "check" | "archive" }> = {
+      draft: { label: "Publish Event", targetStatus: "published", icon: "publish" },
+      published: { label: "Open Voting Window", targetStatus: "open", icon: "play" },
+      open: { label: "Close Voting Window", targetStatus: "closed", icon: "pause" },
+      closed: { label: "Finalize Results", targetStatus: "results_finalized", icon: "check" },
+      results_finalized: { label: "Archive Session", targetStatus: "archived", icon: "archive" },
+    };
+    return transitions[votingSession.status] || null;
+  };
+
+  const handleNextTransition = async () => {
+    const next = getNextTransition();
+    if (!next) return;
+    await handleTransitionStatus(next.targetStatus);
   };
 
   const handleAddResolution = async (e: React.FormEvent) => {
@@ -768,9 +769,8 @@ const toLocalDateString = (dateOrIso?: string | null) => {
         canonical="/voting-management"
         noindex={true}
       />
-      <Navbar />
 
-      <main className="pt-28 pb-20">
+      <main className="pt-8 pb-20">
         <div className="container mx-auto px-4 max-w-6xl">
           
           {/* Header Bar with Event Switcher */}
@@ -953,16 +953,36 @@ const toLocalDateString = (dateOrIso?: string | null) => {
                     Session Operations & Actions
                   </h3>
                   <div className="flex flex-wrap gap-3">
-                    <Button
-                      onClick={handleToggleSessionActive}
-                      className={votingSession.is_active ? "bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl gap-2" : "bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl gap-2"}
-                    >
-                      {votingSession.is_active ? (
-                        <><Pause className="w-4 h-4" /> Pause Voting Window</>
-                      ) : (
-                        <><Play className="w-4 h-4" /> Activate Voting Window</>
-                      )}
-                    </Button>
+                    {(() => {
+                      const next = getNextTransition();
+                      if (!next) return (
+                        <Button disabled className="bg-slate-600 text-white font-bold rounded-xl gap-2 cursor-not-allowed">
+                          <CheckCircle2 className="w-4 h-4" /> Session Archived
+                        </Button>
+                      );
+                      const iconMap = {
+                        publish: <Send className="w-4 h-4" />,
+                        play: <Play className="w-4 h-4" />,
+                        pause: <Pause className="w-4 h-4" />,
+                        check: <CheckCircle2 className="w-4 h-4" />,
+                        archive: <FileCheck2 className="w-4 h-4" />,
+                      };
+                      const colorMap = {
+                        publish: "bg-blue-600 hover:bg-blue-700",
+                        play: "bg-emerald-600 hover:bg-emerald-700",
+                        pause: "bg-amber-600 hover:bg-amber-700",
+                        check: "bg-purple-600 hover:bg-purple-700",
+                        archive: "bg-slate-600 hover:bg-slate-700",
+                      };
+                      return (
+                        <Button
+                          onClick={handleNextTransition}
+                          className={`${colorMap[next.icon]} text-white font-bold rounded-xl gap-2`}
+                        >
+                          {iconMap[next.icon]} {next.label}
+                        </Button>
+                      );
+                    })()}
 
                     <Button
                       variant="outline"
@@ -1623,7 +1643,7 @@ const toLocalDateString = (dateOrIso?: string | null) => {
                                       ? "PASSED (SPECIAL RESOLUTION ≥75%)" 
                                       : item.resolution_type === 'unanimous' 
                                         ? "PASSED (UNANIMOUS 100%)" 
-                                        : "PASSED (ORDINARY MAJORITY >50%)")
+                                        : "PASSED (ORDINARY — FOR > AGAINST)")
                                   : "REJECTED (FAILED STATUTORY THRESHOLD)"}
                               </span>
                               <span className="text-[10px] text-slate-400 font-medium">
@@ -1663,7 +1683,6 @@ const toLocalDateString = (dateOrIso?: string | null) => {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 };
