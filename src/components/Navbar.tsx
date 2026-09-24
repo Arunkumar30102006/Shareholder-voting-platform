@@ -595,211 +595,215 @@ const Navbar = () => {
             </div>
           </div>
         </div>
+      </header>
 
-        {/* ─── MOBILE DRAWER (RESPONSIVE FULL HEIGHT WITH SCROLL LOCK) ─── */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden fixed inset-x-0 top-16 sm:top-18 md:top-20 bottom-0 bg-[#020817]/98 backdrop-blur-2xl border-t border-white/10 z-40 overflow-y-auto px-5 py-6 flex flex-col justify-between">
-            <div className="space-y-6">
+      {/* ─── MOBILE DRAWER (MOUNTED OUTSIDE HEADER AS A VIEWPORT SIBLING) ─── */}
+      {isMobileMenuOpen && (
+        <div
+          id="mobile-navigation-drawer"
+          className="lg:hidden fixed inset-x-0 top-16 sm:top-18 md:top-20 bottom-0 z-[49] bg-[#020817] border-t border-white/10 overflow-y-auto overscroll-contain px-5 py-6 flex flex-col justify-between"
+          style={{ minHeight: "calc(100dvh - 4rem)" }}
+        >
+          <div className="space-y-6">
 
-              {/* Mobile Action Buttons */}
-              <div className="grid grid-cols-2 gap-3">
-                {isLoggedIn ? (
-                  <>
-                    <Link
-                      to="/company-dashboard"
-                      onClick={(e) => handleNavigation(e, "/company-dashboard")}
-                      className="bg-cyan-500 hover:bg-cyan-400 text-[#020817] font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>DASHBOARD</span>
-                    </Link>
-                    <button
-                      onClick={handleDirectLogout}
-                      className="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span>LOGOUT</span>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      to="/shareholder-login"
-                      onClick={(e) => handleNavigation(e, "/shareholder-login")}
-                      className="bg-cyan-500 hover:bg-cyan-400 text-[#020817] font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <Users className="w-3.5 h-3.5" />
-                      <span>VOTER PORTAL</span>
-                    </Link>
+            {/* Mobile Action Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              {isLoggedIn ? (
+                <>
+                  <Link
+                    to="/company-dashboard"
+                    onClick={(e) => handleNavigation(e, "/company-dashboard")}
+                    className="bg-cyan-500 hover:bg-cyan-400 text-[#020817] font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>DASHBOARD</span>
+                  </Link>
+                  <button
+                    onClick={handleDirectLogout}
+                    className="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>LOGOUT</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/shareholder-login"
+                    onClick={(e) => handleNavigation(e, "/shareholder-login")}
+                    className="bg-cyan-500 hover:bg-cyan-400 text-[#020817] font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    <span>VOTER PORTAL</span>
+                  </Link>
 
-                    <Link
-                      to="/company-login"
-                      onClick={(e) => handleNavigation(e, "/company-login")}
-                      className="bg-slate-200 hover:bg-white text-[#020817] font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <Building2 className="w-3.5 h-3.5" />
-                      <span>ADMIN LOGIN</span>
-                    </Link>
-                  </>
-                )}
-              </div>
-
-              {/* Company Registration Highlight for New Companies */}
-              {!isLoggedIn && (
-                <Link
-                  to="/company-register"
-                  onClick={(e) => handleNavigation(e, "/company-register")}
-                  className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-extrabold uppercase tracking-wider text-xs py-2.5 px-3 text-center rounded flex items-center justify-center gap-2 transition-colors"
-                >
-                  <UserPlus className="w-3.5 h-3.5" />
-                  <span>REGISTER YOUR COMPANY</span>
-                </Link>
+                  <Link
+                    to="/company-login"
+                    onClick={(e) => handleNavigation(e, "/company-login")}
+                    className="bg-slate-200 hover:bg-white text-[#020817] font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>ADMIN LOGIN</span>
+                  </Link>
+                </>
               )}
-
-              {/* Mobile Structured Navigation Groups */}
-              <div className="space-y-5">
-                <div>
-                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
-                    <Home className="w-3 h-3" />
-                    <span>CORE NAVIGATION</span>
-                  </div>
-                  <div className="space-y-1">
-                    <Link
-                      to="/"
-                      onClick={(e) => handleNavigation(e, "/")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      HOME
-                    </Link>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
-                    <Vote className="w-3 h-3" />
-                    <span>SOLUTIONS &amp; BALLOTS</span>
-                  </div>
-                  <div className="space-y-1">
-                    <Link
-                      to="/shareholder-e-voting"
-                      onClick={(e) => handleNavigation(e, "/shareholder-e-voting")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      SHAREHOLDER E-VOTING (RULE 20)
-                    </Link>
-                    <Link
-                      to="/agm-voting"
-                      onClick={(e) => handleNavigation(e, "/agm-voting")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      AGM GENERAL MEETINGS (SEC 108)
-                    </Link>
-                    <Link
-                      to="/egm-voting"
-                      onClick={(e) => handleNavigation(e, "/egm-voting")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      EGM SPECIAL RESOLUTIONS
-                    </Link>
-                    <Link
-                      to="/proxy-voting"
-                      onClick={(e) => handleNavigation(e, "/proxy-voting")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      PROXY LODGMENT (FORM MGT-11)
-                    </Link>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3 h-3" />
-                    <span>SERVICES &amp; GOVERNANCE</span>
-                  </div>
-                  <div className="space-y-1">
-                    <Link
-                      to="/scrutinizer-tools"
-                      onClick={(e) => handleNavigation(e, "/scrutinizer-tools")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      SCRUTINIZER AUDIT SUITE
-                    </Link>
-                    <Link
-                      to="/corporate-voting"
-                      onClick={(e) => handleNavigation(e, "/corporate-voting")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      CORPORATE GOVERNANCE
-                    </Link>
-                    <Link
-                      to="/live-demo"
-                      onClick={(e) => handleNavigation(e, "/live-demo")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      INTERACTIVE SANDBOX DEMO
-                    </Link>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3 h-3" />
-                    <span>COMPLIANCE &amp; SUPPORT</span>
-                  </div>
-                  <div className="space-y-1">
-                    <Link
-                      to="/regulatory-framework"
-                      onClick={(e) => handleNavigation(e, "/regulatory-framework")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      REGULATORY FRAMEWORK (SEBI/MCA)
-                    </Link>
-                    <Link
-                      to="/security"
-                      onClick={(e) => handleNavigation(e, "/security")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      SECURITY &amp; MERKLE PROOF
-                    </Link>
-                    <Link
-                      to="/compliance"
-                      onClick={(e) => handleNavigation(e, "/compliance")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      STATUTORY COMPLIANCE HUB
-                    </Link>
-                    <Link
-                      to="/blog"
-                      onClick={(e) => handleNavigation(e, "/blog")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      INSIGHTS &amp; STATUTORY GUIDES
-                    </Link>
-                    <Link
-                      to="/about"
-                      onClick={(e) => handleNavigation(e, "/about")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      ABOUT PLATFORM
-                    </Link>
-                    <Link
-                      to="/contact"
-                      onClick={(e) => handleNavigation(e, "/contact")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-cyan-400 hover:text-cyan-300 rounded hover:bg-white/[0.05]"
-                    >
-                      INVESTOR HELPDESK &amp; CONTACT
-                    </Link>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            <div className="pt-6 pb-2 border-t border-white/10 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              VOTE SECURE • MCA SECTION 108 &amp; SEBI LODR REG 44
+            {/* Company Registration Highlight for New Companies */}
+            {!isLoggedIn && (
+              <Link
+                to="/company-register"
+                onClick={(e) => handleNavigation(e, "/company-register")}
+                className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-extrabold uppercase tracking-wider text-xs py-2.5 px-3 text-center rounded flex items-center justify-center gap-2 transition-colors"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>REGISTER YOUR COMPANY</span>
+              </Link>
+            )}
+
+            {/* Mobile Structured Navigation Groups */}
+            <div className="space-y-5">
+              <div>
+                <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
+                  <Home className="w-3 h-3" />
+                  <span>CORE NAVIGATION</span>
+                </div>
+                <div className="space-y-1">
+                  <Link
+                    to="/"
+                    onClick={(e) => handleNavigation(e, "/")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    HOME
+                  </Link>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
+                  <Vote className="w-3 h-3" />
+                  <span>SOLUTIONS &amp; BALLOTS</span>
+                </div>
+                <div className="space-y-1">
+                  <Link
+                    to="/shareholder-e-voting"
+                    onClick={(e) => handleNavigation(e, "/shareholder-e-voting")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    SHAREHOLDER E-VOTING (RULE 20)
+                  </Link>
+                  <Link
+                    to="/agm-voting"
+                    onClick={(e) => handleNavigation(e, "/agm-voting")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    AGM GENERAL MEETINGS (SEC 108)
+                  </Link>
+                  <Link
+                    to="/egm-voting"
+                    onClick={(e) => handleNavigation(e, "/egm-voting")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    EGM SPECIAL RESOLUTIONS
+                  </Link>
+                  <Link
+                    to="/proxy-voting"
+                    onClick={(e) => handleNavigation(e, "/proxy-voting")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    PROXY LODGMENT (FORM MGT-11)
+                  </Link>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3 h-3" />
+                  <span>SERVICES &amp; GOVERNANCE</span>
+                </div>
+                <div className="space-y-1">
+                  <Link
+                    to="/scrutinizer-tools"
+                    onClick={(e) => handleNavigation(e, "/scrutinizer-tools")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    SCRUTINIZER AUDIT SUITE
+                  </Link>
+                  <Link
+                    to="/corporate-voting"
+                    onClick={(e) => handleNavigation(e, "/corporate-voting")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    CORPORATE GOVERNANCE
+                  </Link>
+                  <Link
+                    to="/live-demo"
+                    onClick={(e) => handleNavigation(e, "/live-demo")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    INTERACTIVE SANDBOX DEMO
+                  </Link>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>COMPLIANCE &amp; SUPPORT</span>
+                </div>
+                <div className="space-y-1">
+                  <Link
+                    to="/regulatory-framework"
+                    onClick={(e) => handleNavigation(e, "/regulatory-framework")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    REGULATORY FRAMEWORK (SEBI/MCA)
+                  </Link>
+                  <Link
+                    to="/security"
+                    onClick={(e) => handleNavigation(e, "/security")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    SECURITY &amp; MERKLE PROOF
+                  </Link>
+                  <Link
+                    to="/compliance"
+                    onClick={(e) => handleNavigation(e, "/compliance")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    STATUTORY COMPLIANCE HUB
+                  </Link>
+                  <Link
+                    to="/blog"
+                    onClick={(e) => handleNavigation(e, "/blog")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    INSIGHTS &amp; STATUTORY GUIDES
+                  </Link>
+                  <Link
+                    to="/about"
+                    onClick={(e) => handleNavigation(e, "/about")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    ABOUT PLATFORM
+                  </Link>
+                  <Link
+                    to="/contact"
+                    onClick={(e) => handleNavigation(e, "/contact")}
+                    className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-cyan-400 hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                  >
+                    INVESTOR HELPDESK &amp; CONTACT
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
-        )}
-      </header>
+
+          <div className="pt-6 pb-6 border-t border-white/10 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            VOTE SECURE • MCA SECTION 108 &amp; SEBI LODR REG 44
+          </div>
+        </div>
+      )}
 
       {/* ─── SAFETY ALERT FOR LEAVING PROTECTED PORTAL ─── */}
       <AlertDialog open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
