@@ -1,26 +1,22 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
-  Shield,
   Users,
   Building2,
   LogOut,
   ShieldCheck,
   Menu,
   X,
-  BookOpen,
   Layers,
   ChevronDown,
   Lock,
-  ArrowRight,
   Vote,
   Sparkles,
-  HelpCircle,
-  Headphones,
   CheckCircle2,
-  Search,
   UserPlus,
-  Home
+  Home,
+  HelpCircle,
+  FileText
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -39,37 +35,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { PillButton } from "@/components/common/PillButton";
-
-const QUICK_SEARCH_ITEMS = [
-  { label: "Shareholder E-Voting Portal", path: "/shareholder-login", category: "Portals" },
-  { label: "Company Admin & Governance Hub", path: "/company-login", category: "Portals" },
-  { label: "Company Onboarding Registration", path: "/company-register", category: "Portals" },
-  { label: "AGM E-Voting (Section 108 & Rule 20)", path: "/agm-voting", category: "Solutions" },
-  { label: "EGM Extraordinary General Meetings", path: "/egm-voting", category: "Solutions" },
-  { label: "Proxy Voting (Section 105 & Form MGT-11)", path: "/proxy-voting", category: "Solutions" },
-  { label: "Scrutinizer Audit Suite & Dual Custody", path: "/scrutinizer-tools", category: "Solutions" },
-  { label: "Regulatory Compliance Framework (SEBI/MCA)", path: "/regulatory-framework", category: "Compliance" },
-  { label: "Technical Security & Merkle Tree Proof", path: "/security", category: "Compliance" },
-  { label: "Statutory Compliance Hub", path: "/compliance", category: "Compliance" },
-  { label: "Live Interactive Demo", path: "/live-demo", category: "Demo" },
-  { label: "Investor Helpdesk & Contact Cell", path: "/contact", category: "Support" },
-  { label: "E-Voting Statutory FAQs", path: "/faqs", category: "Resources" },
-];
 
 const Navbar = () => {
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const location = useLocation();
@@ -99,6 +71,23 @@ const Navbar = () => {
       }
     };
   }, []);
+
+  // Lock body scroll when mobile menu is open to prevent background scrolling
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
+  // Automatically close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   // Check if current page is a protected portal
   const isPortalPage =
@@ -134,18 +123,6 @@ const Navbar = () => {
       if (unsubscribe) unsubscribe();
     };
   }, [isPortalPage]);
-
-  // Global Ctrl+K shortcut for search
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setIsSearchOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
 
   const handleNavigation = useCallback(
     (e: React.MouseEvent, path: string) => {
@@ -187,13 +164,6 @@ const Navbar = () => {
     navigate("/");
   };
 
-  const filteredSearchResults = searchQuery.trim()
-    ? QUICK_SEARCH_ITEMS.filter((item) =>
-        item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : QUICK_SEARCH_ITEMS;
-
   return (
     <>
       <header
@@ -202,38 +172,38 @@ const Navbar = () => {
         className="fixed top-0 left-0 right-0 z-50 w-full bg-[#020817]/95 backdrop-blur-xl border-b border-white/[0.08] shadow-lg shadow-black/40 transition-colors"
       >
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="flex items-center justify-between h-18 md:h-20">
+          <div className="flex items-center justify-between h-16 sm:h-18 md:h-20">
 
-            {/* ─── LEFT: BRAND LOGO (WITH CLEAN DIVIDER & BREATHING ROOM) ─── */}
-            <div className="flex items-center pr-6 lg:pr-8 border-r border-white/10 shrink-0">
+            {/* ─── LEFT: BRAND LOGO ─── */}
+            <div className="flex items-center pr-3 sm:pr-6 lg:pr-8 border-r-0 lg:border-r border-white/10 shrink-0">
               <Link
                 to="/"
                 onClick={(e) => handleNavigation(e, "/")}
-                className="flex items-center gap-3 group focus:outline-none"
+                className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none"
               >
-                <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-400/30 group-hover:border-cyan-400/60 transition-all shrink-0">
+                <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-500/10 border border-blue-400/30 group-hover:border-cyan-400/60 transition-all shrink-0">
                   <img
                     src="/logo-48.webp"
                     alt="Vote India Secure Logo"
                     width={26}
                     height={26}
                     decoding="async"
-                    className="h-6 w-6 object-contain"
+                    className="h-5 w-5 sm:h-6 sm:w-6 object-contain"
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-base lg:text-lg font-black tracking-wide text-white group-hover:text-cyan-300 transition-colors uppercase whitespace-nowrap">
+                  <span className="text-sm sm:text-base lg:text-lg font-black tracking-wide text-white group-hover:text-cyan-300 transition-colors uppercase whitespace-nowrap">
                     VOTE<span className="text-cyan-400 ml-1">SECURE</span>
                   </span>
-                  <span className="text-[8px] lg:text-[9px] font-extrabold tracking-[0.2em] text-slate-400 uppercase -mt-0.5 whitespace-nowrap">
+                  <span className="text-[7.5px] sm:text-[8px] lg:text-[9px] font-extrabold tracking-[0.16em] sm:tracking-[0.2em] text-slate-400 uppercase -mt-0.5 whitespace-nowrap">
                     MCA &amp; SEBI E-VOTING
                   </span>
                 </div>
               </Link>
             </div>
 
-            {/* ─── CENTER-RIGHT: STRUCTURED UPPERCASE NAVIGATION LINKS ─── */}
-            <nav className="hidden lg:flex items-center gap-2.5 xl:gap-5 2xl:gap-7 ml-4 xl:ml-8 mr-6" role="navigation">
+            {/* ─── CENTER-RIGHT: STRUCTURED UPPERCASE NAVIGATION LINKS (DESKTOP ONLY) ─── */}
+            <nav className="hidden lg:flex items-center gap-2 xl:gap-4 2xl:gap-6 ml-3 xl:ml-6 mr-4" role="navigation">
 
               {/* 1. HOME OPTION */}
               <NavLink
@@ -382,7 +352,7 @@ const Navbar = () => {
                     align="start"
                   >
                     <DropdownMenuLabel className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2.5 py-1.5 border-b border-white/10 mb-1">
-                      Corporate &amp; Scrutinizer Services
+                      Statutory Services &amp; Scrutineers
                     </DropdownMenuLabel>
 
                     <DropdownMenuItem asChild className="focus:bg-blue-600/20 data-[highlighted]:bg-blue-600/20 hover:bg-blue-600/20 outline-none cursor-pointer rounded transition-colors group">
@@ -391,13 +361,13 @@ const Navbar = () => {
                         onClick={(e) => handleNavigation(e, "/scrutinizer-tools")}
                         className="flex items-start gap-3 p-2.5 w-full"
                       >
-                        <Shield className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5 group-hover:text-cyan-300" />
+                        <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5 group-hover:text-cyan-300" />
                         <div>
                           <div className="text-xs font-bold text-white group-hover:text-cyan-300 uppercase tracking-wide">
                             Scrutinizer Audit Suite
                           </div>
                           <div className="text-[11px] text-slate-300 group-hover:text-slate-100">
-                            Dual-custody tallies and Form MGT-13 certified reports
+                            Dual-key cryptographic unblocking &amp; Form MGT-13
                           </div>
                         </div>
                       </Link>
@@ -409,13 +379,13 @@ const Navbar = () => {
                         onClick={(e) => handleNavigation(e, "/corporate-voting")}
                         className="flex items-start gap-3 p-2.5 w-full"
                       >
-                        <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5 group-hover:text-cyan-300" />
+                        <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5 group-hover:text-cyan-300" />
                         <div>
                           <div className="text-xs font-bold text-white group-hover:text-cyan-300 uppercase tracking-wide">
                             Corporate Governance
                           </div>
                           <div className="text-[11px] text-slate-300 group-hover:text-slate-100">
-                            Secretarial standards &amp; statutory record compliance
+                            Board meetings, postal ballots &amp; equity schemes
                           </div>
                         </div>
                       </Link>
@@ -427,13 +397,13 @@ const Navbar = () => {
                         onClick={(e) => handleNavigation(e, "/live-demo")}
                         className="flex items-start gap-3 p-2.5 w-full"
                       >
-                        <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5 group-hover:text-cyan-300" />
+                        <Vote className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5 group-hover:text-cyan-300" />
                         <div>
                           <div className="text-xs font-bold text-white group-hover:text-cyan-300 uppercase tracking-wide">
-                            Interactive Demo
+                            Interactive Sandbox Demo
                           </div>
                           <div className="text-[11px] text-slate-300 group-hover:text-slate-100">
-                            Simulate live ballot voting and tallying
+                            Test live voting &amp; instant audit validation
                           </div>
                         </div>
                       </Link>
@@ -442,7 +412,7 @@ const Navbar = () => {
                 </DropdownMenu>
               </div>
 
-              {/* 4. COMPLIANCE & SECURITY DROPDOWN */}
+              {/* 4. COMPLIANCE & GOVERNANCE DROPDOWN */}
               <div
                 className="relative"
                 onMouseEnter={() => handleDropdownEnter("compliance")}
@@ -552,8 +522,8 @@ const Navbar = () => {
               </Link>
             </nav>
 
-            {/* ─── FAR RIGHT: RECTANGULAR ACTION BUTTONS + SEARCH ICON ─── */}
-            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 ml-auto pl-5 lg:pl-6 xl:pl-8 border-l border-white/10">
+            {/* ─── FAR RIGHT: DESKTOP ACTIONS / MOBILE HAMBURGER ─── */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto pl-2 sm:pl-4 lg:pl-6 xl:pl-8 border-l-0 lg:border-l border-white/10">
 
               {isLoggedIn ? (
                 /* Authenticated User Actions */
@@ -562,22 +532,22 @@ const Navbar = () => {
                     to="/company-dashboard"
                     onClick={(e) => handleNavigation(e, "/company-dashboard")}
                     label="DASHBOARD"
-                    className="bg-slate-200 text-[#020817] font-black uppercase tracking-wider text-xs px-4 py-2.5 shadow-sm rounded whitespace-nowrap shrink-0"
+                    className="bg-slate-200 text-[#020817] font-black uppercase tracking-wider text-[11px] sm:text-xs px-3 py-2 sm:px-4 sm:py-2.5 shadow-sm rounded whitespace-nowrap shrink-0"
                     circleClassName="bg-cyan-400"
-                    labelClassName="text-[#020817] font-black uppercase tracking-wider text-xs"
-                    hoverLabelClassName="text-[#020817] font-black uppercase tracking-wider text-xs"
+                    labelClassName="text-[#020817] font-black uppercase tracking-wider text-[11px] sm:text-xs"
+                    hoverLabelClassName="text-[#020817] font-black uppercase tracking-wider text-[11px] sm:text-xs"
                   />
                   <button
                     onClick={handleDirectLogout}
                     title="Sign Out"
-                    className="text-slate-300 hover:text-red-400 transition-colors p-2 shrink-0"
+                    className="text-slate-300 hover:text-red-400 transition-colors p-1.5 sm:p-2 shrink-0"
                   >
                     <LogOut className="w-4 h-4" />
                   </button>
                 </div>
               ) : (
-                /* Public Call To Action Buttons (React Bits PillNav Animation) */
-                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                /* Public Call To Action Buttons (Desktop Only - hidden on mobile < lg) */
+                <div className="hidden lg:flex items-center gap-2.5 xl:gap-3 shrink-0">
                   {/* Voter Portal (React Bits Pill Animation) */}
                   <PillButton
                     to="/shareholder-login"
@@ -613,236 +583,223 @@ const Navbar = () => {
                 </div>
               )}
 
-              {/* Search Magnifying Glass Icon (From Reference Image) */}
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                aria-label="Open search dialog"
-                className="text-white hover:text-cyan-400 p-1.5 focus:outline-none transition-colors"
-                title="Search platform (Ctrl+K)"
-              >
-                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-
-              {/* Mobile Hamburger Menu Toggle */}
+              {/* Mobile Hamburger Menu Toggle Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                aria-label="Toggle navigation menu"
-                className="lg:hidden text-white hover:text-cyan-400 p-1.5 focus:outline-none transition-colors"
+                aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+                aria-expanded={isMobileMenuOpen}
+                className="lg:hidden text-white hover:text-cyan-400 p-2 -mr-1 rounded-md hover:bg-white/[0.06] focus:outline-none focus:ring-1 focus:ring-cyan-400 transition-colors"
               >
-                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {isMobileMenuOpen ? <X className="w-6 h-6 text-cyan-400" /> : <Menu className="w-6 h-6 text-white" />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* ─── MOBILE DRAWER (MATCHING WEBSITE PALETTE & UPPERCASE STYLE) ─── */}
+        {/* ─── MOBILE DRAWER (RESPONSIVE FULL HEIGHT WITH SCROLL LOCK) ─── */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 bg-[#020817]/98 backdrop-blur-3xl border-t border-white/10 z-40 overflow-y-auto px-5 py-6 flex flex-col justify-between">
+          <div className="lg:hidden fixed inset-x-0 top-16 sm:top-18 md:top-20 bottom-0 bg-[#020817]/98 backdrop-blur-2xl border-t border-white/10 z-40 overflow-y-auto px-5 py-6 flex flex-col justify-between">
             <div className="space-y-6">
 
               {/* Mobile Action Buttons */}
               <div className="grid grid-cols-2 gap-3">
-                <Link
-                  to="/shareholder-login"
-                  onClick={(e) => handleNavigation(e, "/shareholder-login")}
-                  className="bg-cyan-600 hover:bg-cyan-500 text-white font-black uppercase tracking-wider text-xs p-3 text-center rounded shadow"
-                >
-                  VOTER PORTAL
-                </Link>
+                {isLoggedIn ? (
+                  <>
+                    <Link
+                      to="/company-dashboard"
+                      onClick={(e) => handleNavigation(e, "/company-dashboard")}
+                      className="bg-cyan-500 hover:bg-cyan-400 text-[#020817] font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>DASHBOARD</span>
+                    </Link>
+                    <button
+                      onClick={handleDirectLogout}
+                      className="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>LOGOUT</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/shareholder-login"
+                      onClick={(e) => handleNavigation(e, "/shareholder-login")}
+                      className="bg-cyan-500 hover:bg-cyan-400 text-[#020817] font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      <span>VOTER PORTAL</span>
+                    </Link>
 
-                <Link
-                  to="/company-login"
-                  onClick={(e) => handleNavigation(e, "/company-login")}
-                  className="bg-slate-200 hover:bg-white text-[#020817] font-black uppercase tracking-wider text-xs p-3 text-center rounded shadow"
-                >
-                  ADMIN LOGIN
-                </Link>
+                    <Link
+                      to="/company-login"
+                      onClick={(e) => handleNavigation(e, "/company-login")}
+                      className="bg-slate-200 hover:bg-white text-[#020817] font-black uppercase tracking-wider text-xs py-3 px-2 text-center rounded shadow-md transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <Building2 className="w-3.5 h-3.5" />
+                      <span>ADMIN LOGIN</span>
+                    </Link>
+                  </>
+                )}
               </div>
 
+              {/* Company Registration Highlight for New Companies */}
+              {!isLoggedIn && (
+                <Link
+                  to="/company-register"
+                  onClick={(e) => handleNavigation(e, "/company-register")}
+                  className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-extrabold uppercase tracking-wider text-xs py-2.5 px-3 text-center rounded flex items-center justify-center gap-2 transition-colors"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>REGISTER YOUR COMPANY</span>
+                </Link>
+              )}
+
               {/* Mobile Structured Navigation Groups */}
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1">
-                    CORE NAVIGATION
+                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
+                    <Home className="w-3 h-3" />
+                    <span>CORE NAVIGATION</span>
                   </div>
                   <div className="space-y-1">
                     <Link
                       to="/"
                       onClick={(e) => handleNavigation(e, "/")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
                       HOME
-                    </Link>
-                    <Link
-                      to="/company-register"
-                      onClick={(e) => handleNavigation(e, "/company-register")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-emerald-400 hover:text-emerald-300"
-                    >
-                      COMPANY REGISTRATION
                     </Link>
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1">
-                    SOLUTIONS &amp; BALLOTS
+                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
+                    <Vote className="w-3 h-3" />
+                    <span>SOLUTIONS &amp; BALLOTS</span>
                   </div>
                   <div className="space-y-1">
                     <Link
                       to="/shareholder-e-voting"
                       onClick={(e) => handleNavigation(e, "/shareholder-e-voting")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
-                      SHAREHOLDER E-VOTING
+                      SHAREHOLDER E-VOTING (RULE 20)
                     </Link>
                     <Link
                       to="/agm-voting"
                       onClick={(e) => handleNavigation(e, "/agm-voting")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
-                      AGM GENERAL MEETINGS
+                      AGM GENERAL MEETINGS (SEC 108)
                     </Link>
                     <Link
                       to="/egm-voting"
                       onClick={(e) => handleNavigation(e, "/egm-voting")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
                       EGM SPECIAL RESOLUTIONS
                     </Link>
                     <Link
                       to="/proxy-voting"
                       onClick={(e) => handleNavigation(e, "/proxy-voting")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
-                      PROXY LODGMENT (SEC 105)
+                      PROXY LODGMENT (FORM MGT-11)
                     </Link>
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1">
-                    SERVICES &amp; GOVERNANCE
+                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>SERVICES &amp; GOVERNANCE</span>
                   </div>
                   <div className="space-y-1">
                     <Link
                       to="/scrutinizer-tools"
                       onClick={(e) => handleNavigation(e, "/scrutinizer-tools")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
                       SCRUTINIZER AUDIT SUITE
                     </Link>
                     <Link
                       to="/corporate-voting"
                       onClick={(e) => handleNavigation(e, "/corporate-voting")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
                       CORPORATE GOVERNANCE
                     </Link>
                     <Link
                       to="/live-demo"
                       onClick={(e) => handleNavigation(e, "/live-demo")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
-                      INTERACTIVE DEMO
+                      INTERACTIVE SANDBOX DEMO
                     </Link>
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1">
-                    COMPLIANCE &amp; SUPPORT
+                  <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest px-2 mb-2 border-b border-white/10 pb-1 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>COMPLIANCE &amp; SUPPORT</span>
                   </div>
                   <div className="space-y-1">
                     <Link
                       to="/regulatory-framework"
                       onClick={(e) => handleNavigation(e, "/regulatory-framework")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
-                      REGULATORY FRAMEWORK
+                      REGULATORY FRAMEWORK (SEBI/MCA)
                     </Link>
                     <Link
                       to="/security"
                       onClick={(e) => handleNavigation(e, "/security")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
                       SECURITY &amp; MERKLE PROOF
                     </Link>
                     <Link
+                      to="/compliance"
+                      onClick={(e) => handleNavigation(e, "/compliance")}
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                    >
+                      STATUTORY COMPLIANCE HUB
+                    </Link>
+                    <Link
                       to="/blog"
                       onClick={(e) => handleNavigation(e, "/blog")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
-                      INSIGHTS &amp; ARTICLES
+                      INSIGHTS &amp; STATUTORY GUIDES
+                    </Link>
+                    <Link
+                      to="/about"
+                      onClick={(e) => handleNavigation(e, "/about")}
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300 rounded hover:bg-white/[0.05]"
+                    >
+                      ABOUT PLATFORM
                     </Link>
                     <Link
                       to="/contact"
                       onClick={(e) => handleNavigation(e, "/contact")}
-                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-cyan-300"
+                      className="block px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-cyan-400 hover:text-cyan-300 rounded hover:bg-white/[0.05]"
                     >
-                      CONTACT US
+                      INVESTOR HELPDESK &amp; CONTACT
                     </Link>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="pt-6 border-t border-white/10 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="pt-6 pb-2 border-t border-white/10 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
               VOTE SECURE • MCA SECTION 108 &amp; SEBI LODR REG 44
             </div>
           </div>
         )}
       </header>
-
-      {/* ─── QUICK SEARCH MODAL (TRIGGERED BY SEARCH ICON / CTRL+K) ─── */}
-      <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-        <DialogContent className="bg-[#020817] border border-white/15 text-white max-w-xl p-0 overflow-hidden shadow-2xl rounded-lg">
-          <DialogHeader className="p-4 border-b border-white/10">
-            <DialogTitle className="text-xs font-black uppercase tracking-wider text-cyan-400 flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              <span>Quick Search &amp; Navigation</span>
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search solutions, resolutions, guidelines, or portals..."
-                className="w-full pl-9 pr-4 py-2.5 bg-black/40 border border-white/15 text-white text-xs font-medium placeholder-slate-400 focus:outline-none focus:border-cyan-400 rounded"
-                autoFocus
-              />
-            </div>
-
-            <div className="mt-4 max-h-60 overflow-y-auto space-y-1">
-              {filteredSearchResults.length > 0 ? (
-                filteredSearchResults.map((item, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setIsSearchOpen(false);
-                      setSearchQuery("");
-                      navigate(item.path);
-                    }}
-                    className="w-full flex items-center justify-between p-2.5 hover:bg-white/10 text-left transition-colors rounded"
-                  >
-                    <span className="text-xs font-bold text-white tracking-wide">{item.label}</span>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-500/10 px-2 py-0.5 border border-cyan-500/20 rounded">
-                      {item.category}
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <div className="py-6 text-center text-xs text-slate-400 font-medium">
-                  No matching items found for "{searchQuery}"
-                </div>
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* ─── SAFETY ALERT FOR LEAVING PROTECTED PORTAL ─── */}
       <AlertDialog open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
