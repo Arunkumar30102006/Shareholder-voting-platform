@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -46,6 +47,45 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // 1. Authenticate caller via Supabase JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Authentication credentials required" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: "Invalid or expired session" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      // Verify caller is a company admin
+      const { data: adminRecord } = await supabaseAdmin
+        .from("company_admins")
+        .select("company_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!adminRecord) {
+        return new Response(JSON.stringify({ error: "Caller is not an authorized company administrator" }), {
+          status: 403,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+    }
+
     const {
       votingSessionId,
       companyName,
@@ -201,8 +241,9 @@ const handler = async (req: Request): Promise<Response> => {
 
           return { success: true, email: recipient.email, id: res.id };
         } catch (emailError: unknown) {
+          const errMsg = emailError instanceof Error ? emailError.message : "Delivery failed";
           console.error(`Failed delivery to ${recipient.email}:`, emailError);
-          return { success: false, email: recipient.email, error: emailError?.message || "Delivery failed" };
+          return { success: false, email: recipient.email, error: errMsg };
         }
       });
 
@@ -231,9 +272,10 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : "Internal server error";
     console.error("Error in send-meeting-invites function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMsg }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

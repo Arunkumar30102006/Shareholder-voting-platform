@@ -1,18 +1,17 @@
 import { SEO } from "@/components/layout/SEO";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { Building2, Mail, Lock, ArrowRight, Shield, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
 import AnimatedOtpVerification, { VerifyResult } from "@/components/auth/AnimatedOtpVerification";
+import { TurnstileWidget, TurnstileWidgetRef } from "@/components/common/TurnstileWidget";
 
 import { env } from "@/config/env";
 
@@ -27,9 +26,13 @@ const CompanyLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
-  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [challengeId, setChallengeId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState("");
   
+  // Cloudflare Turnstile Bot Protection
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<TurnstileWidgetRef>(null);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -53,6 +56,12 @@ const CompanyLogin = () => {
     setIsLoading(true);
     setErrors({});
 
+    if (!turnstileToken) {
+      toast.error("Please complete the security challenge before signing in.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const validatedData = loginSchema.parse(formData);
 
@@ -62,6 +71,8 @@ const CompanyLogin = () => {
       });
 
       if (error) {
+        turnstileRef.current?.reset();
+        setTurnstileToken("");
         if (error.message.includes("Invalid login credentials")) {
           toast.error("Invalid email or password");
         } else {
@@ -80,13 +91,15 @@ const CompanyLogin = () => {
           .maybeSingle();
 
         if (adminError || !adminData) {
+          turnstileRef.current?.reset();
+          setTurnstileToken("");
           toast.error("You are not registered as a company administrator");
           await supabase.auth.signOut();
           setIsLoading(false);
           return;
         }
 
-        // Fetch company name for the email
+        // Fetch company name for UI display
         const { data: companyData } = await (supabase
           .from("companies") as any)
           .select("company_name")
@@ -96,31 +109,33 @@ const CompanyLogin = () => {
         const cName = companyData?.company_name || "Vote India Secure";
         setCompanyName(cName);
 
-        // Generate OTP
-        const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-        setGeneratedOtp(newOtp);
-
-        // Send OTP
-        const { error: emailError } = await supabase.functions.invoke('send-shareholder-credentials', {
+        // Initiate Server-Side 2FA Challenge with Turnstile bot verification
+        const { data: initData, error: initError } = await supabase.functions.invoke("initiate-company-2fa", {
           body: {
-            type: 'login_otp',
-            email: validatedData.email,
-            companyName: cName,
-            otp: newOtp
+            turnstile_token: turnstileToken,
           }
         });
 
-        if (emailError) {
-          console.error("OTP send error:", emailError);
-          toast.error("Failed to send 2FA OTP email.", {
-            description: "Please ensure RESEND_API_KEY secret is configured in your Supabase Edge Functions environment."
+        if (initError || !initData?.success || !initData?.challenge_id) {
+          turnstileRef.current?.reset();
+          setTurnstileToken("");
+          console.error("2FA initiation error:", initError || initData);
+          toast.error("Failed to initiate two-factor authentication.", {
+            description: initData?.error || "Please ensure the administrator email service is configured."
           });
           await supabase.auth.signOut();
           setIsLoading(false);
           return;
         }
 
-        toast.success("OTP sent to your registered email");
+        setChallengeId(initData.challenge_id);
+        if (initData.company_name) {
+          setCompanyName(initData.company_name);
+        }
+
+        toast.success("Security Passcode Dispatched", {
+          description: initData.message || "A 6-digit verification code has been dispatched to your email."
+        });
         setStep(2);
       }
     } catch (err) {
@@ -151,37 +166,64 @@ const CompanyLogin = () => {
   };
 
   const handleOtpVerify = async (enteredOtp: string): Promise<VerifyResult> => {
-    if (enteredOtp.trim() === generatedOtp.trim()) {
-      sessionStorage.setItem("company_2fa_verified", "true");
-      return { success: true };
-    } else {
+    if (!challengeId) {
       return {
         success: false,
-        error: "Invalid verification code. Please check your email and try again.",
+        error: "Verification challenge expired. Please sign in again.",
+      };
+    }
+
+    try {
+      // Server-Side Verification: Compare submitted OTP against stored hash in PostgreSQL
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-company-2fa", {
+        body: {
+          challenge_id: challengeId,
+          otp: enteredOtp.trim(),
+        }
+      });
+
+      if (verifyError || !verifyData?.success) {
+        let serverMsg = verifyData?.error;
+        if (!serverMsg && verifyError) {
+          try {
+            const errContext = await (verifyError as any)?.context?.json?.();
+            serverMsg = errContext?.error || verifyError.message;
+          } catch {
+            serverMsg = verifyError.message;
+          }
+        }
+
+        return {
+          success: false,
+          error: serverMsg || "Incorrect verification code. Please check your email.",
+        };
+      }
+
+      return { success: true };
+    } catch (err: unknown) {
+      console.error("OTP verification error:", err);
+      return {
+        success: false,
+        error: (err as Error).message || "Verification service error.",
       };
     }
   };
 
   const handleOtpResend = async (): Promise<boolean> => {
     try {
-      const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(newOtp);
-
-      const { error: emailError } = await supabase.functions.invoke('send-shareholder-credentials', {
+      const { data: initData, error: initError } = await supabase.functions.invoke("initiate-company-2fa", {
         body: {
-          type: 'login_otp',
-          email: formData.email,
-          companyName: companyName || "Vote India Secure",
-          otp: newOtp
+          turnstile_token: turnstileToken,
         }
       });
 
-      if (emailError) {
-        toast.error("Failed to send OTP email. Please try again.");
+      if (initError || !initData?.success || !initData?.challenge_id) {
+        toast.error("Failed to resend verification code. Please try again.");
         return false;
       }
 
-      toast.success("New verification code sent to your registered email");
+      setChallengeId(initData.challenge_id);
+      toast.success("New verification code dispatched to your registered email");
       return true;
     } catch (err: unknown) {
       console.error("Resend OTP error:", err);
@@ -191,14 +233,21 @@ const CompanyLogin = () => {
   };
 
   const handleOtpSuccess = () => {
-    toast.success("Login successful!");
+    toast.success("Login successful!", {
+      description: "Welcome to the Company Administration Console.",
+    });
     navigate("/company-dashboard");
   };
 
   const handleBackToLogin = async () => {
+    try {
+      await supabase.rpc("invalidate_company_admin_2fa");
+    } catch {
+      // non-fatal cleanup
+    }
     await supabase.auth.signOut();
     setStep(1);
-    setGeneratedOtp("");
+    setChallengeId(null);
   };
 
 
@@ -210,7 +259,6 @@ const CompanyLogin = () => {
         canonical="/company-login"
         noindex={true}
       />
-      <Navbar />
 
       <main className="pt-24 pb-16 min-h-[calc(100vh-200px)] flex items-center">
         <div className="container mx-auto px-4">
@@ -301,6 +349,16 @@ const CompanyLogin = () => {
                         )}
                       </div>
 
+                      {/* Cloudflare Turnstile Bot Protection */}
+                      <TurnstileWidget
+                        ref={turnstileRef}
+                        action="company-login"
+                        theme="dark"
+                        onSuccess={(tok) => setTurnstileToken(tok)}
+                        onError={() => setTurnstileToken("")}
+                        onExpire={() => setTurnstileToken("")}
+                      />
+
                       <Button
                         type="submit"
                         variant="hero"
@@ -356,8 +414,6 @@ const CompanyLogin = () => {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

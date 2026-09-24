@@ -92,68 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
 </body>
 </html>`;
     } else if (type === "login_otp" || type === "otp") {
-      if (!otp) throw new Error("OTP is required");
-      subject = `Login Verification Passcode: ${companyName}`;
-      text = `ADMIN LOGIN OTP: ${otp}\n\nCompany: ${companyName}\nPlatform: Vote India Secure\nValid for 10 minutes. Never share this code with anyone.`;
-      html = `
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Login Passcode</title>
-</head>
-<body style="margin:0;padding:0;background-color:#020817;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#020817;padding:30px 10px;">
-    <tr>
-      <td align="center">
-        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:580px;background-color:#0d1b2a;border:1px solid rgba(2,132,199,0.4);border-radius:20px;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.7);">
-          <!-- Header -->
-          <tr>
-            <td style="padding:32px 32px 20px;background:linear-gradient(180deg,#0a192f 0%,#0d1b2a 100%);text-align:center;border-bottom:1px solid rgba(255,255,255,0.1);">
-              <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center" style="margin:0 auto 12px;">
-                <tr>
-                  <td style="background-color:#0284c7;border-radius:12px;width:48px;height:48px;text-align:center;vertical-align:middle;color:#ffffff;font-size:24px;">🔒</td>
-                </tr>
-              </table>
-              <h1 style="color:#ffffff;font-size:22px;margin:0 0 4px;font-weight:800;letter-spacing:-0.5px;">Vote India Secure</h1>
-              <p style="color:#38bdf8;font-size:12px;font-weight:600;margin:0;text-transform:uppercase;letter-spacing:1.5px;">Corporate Governance Portal</p>
-            </td>
-          </tr>
-          <!-- Body -->
-          <tr>
-            <td style="padding:32px;">
-              <h2 style="color:#ffffff;font-size:18px;margin:0 0 12px;font-weight:700;">Administrator Verification</h2>
-              <p style="color:#cbd5e1;font-size:14px;line-height:1.6;margin:0 0 24px;">
-                You are authenticating into the corporate issuer console for <strong style="color:#38bdf8;">${companyName}</strong>. Please enter the one-time authentication passcode below:
-              </p>
-              <div style="background-color:#020817;border:2px solid #0284c7;border-radius:14px;padding:22px;text-align:center;margin:0 0 24px;">
-                <span style="font-family:'Courier New',Courier,monospace;font-size:38px;font-weight:800;color:#38bdf8;letter-spacing:10px;display:inline-block;">${otp}</span>
-              </div>
-              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:rgba(2,132,199,0.1);border-left:4px solid #0284c7;border-radius:0 8px 8px 0;padding:12px 16px;">
-                <tr>
-                  <td style="color:#93c5fd;font-size:12px;line-height:1.5;">
-                    ⏱️ <strong>Passcode Validity:</strong> This code expires in 10 minutes. Never disclose this code to anyone.
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <!-- Footer -->
-          <tr>
-            <td style="padding:20px 32px;background-color:#070d18;border-top:1px solid rgba(255,255,255,0.08);text-align:center;">
-              <p style="color:#64748b;font-size:11px;line-height:1.6;margin:0;">
-                © 2026 Vote India Secure · Bandra Kurla Complex (BKC), Mumbai, India<br/>
-                Automated statutory system notification · Do not reply directly
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+      throw new Error("Client-initiated login OTP is disabled. Use the initiate-company-2fa endpoint.");
     } else {
       // Default: Shareholder Credentials Email
       if (!shareholderName || !loginId || !password) throw new Error("Missing credentials fields");

@@ -770,7 +770,7 @@ const toLocalDateString = (dateOrIso?: string | null) => {
         noindex={true}
       />
 
-      <main className="pt-8 pb-20">
+      <main className="pt-32 md:pt-36 pb-20">
         <div className="container mx-auto px-4 max-w-6xl">
           
           {/* Header Bar with Event Switcher */}

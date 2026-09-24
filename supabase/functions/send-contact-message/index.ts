@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { verifyTurnstileToken } from "../_shared/turnstile.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +16,7 @@ serve(async (req) => {
   }
 
   try {
+    const body = await req.json();
     const { 
       firstname, 
       lastname, 
@@ -25,7 +27,26 @@ serve(async (req) => {
       company, 
       phone,
       inquiryType 
-    } = await req.json();
+    } = body;
+
+    const turnstileToken = (typeof body.turnstile_token === "string" ? body.turnstile_token : body.turnstileToken) || "";
+
+    // 0. Enforce Cloudflare Turnstile bot verification BEFORE processing inquiry or sending emails
+    const clientIp = req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp);
+
+    if (!turnstileResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: turnstileResult.error || "Turnstile verification failed. Please complete the security challenge." 
+        }),
+        { 
+          status: 403, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
 
     if (!email || !message) {
       throw new Error("Email and Message are required");

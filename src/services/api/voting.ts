@@ -14,11 +14,19 @@ export const votingApi = {
    * Initiates authentication challenge for a shareholder.
    * Returns generic message and opaque challenge_id (anti-enumeration).
    */
-  initiateAuth: async (identifier: string, pan: string): Promise<{ message: string; challenge_id: string }> => {
+  initiateAuth: async (
+    identifier: string,
+    pan: string,
+    turnstileToken?: string
+  ): Promise<{ message: string; challenge_id: string }> => {
     const res = await fetch("/api/auth/initiate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier, pan }),
+      body: JSON.stringify({
+        identifier,
+        pan,
+        turnstile_token: turnstileToken || "",
+      }),
     });
 
     if (!res.ok) {

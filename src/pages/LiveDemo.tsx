@@ -7,8 +7,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { SEO } from "@/components/layout/SEO";
 import { createBreadcrumbSchema } from "@/components/layout/StructuredData";
 import React, { Suspense } from "react";
@@ -452,7 +450,6 @@ const LiveDemo = () => {
         canonical="/live-demo"
         schemas={[breadcrumbSchema]}
       />
-      <Navbar />
       <main className="container mx-auto px-4 pt-28 pb-16 md:py-20">
         {/* Header */}
         <motion.div
@@ -494,7 +491,6 @@ const LiveDemo = () => {
           {step === 2 && <StepThankYou key="thankyou" />}
         </AnimatePresence>
       </main>
-      <Footer />
     </div>
   );
 };

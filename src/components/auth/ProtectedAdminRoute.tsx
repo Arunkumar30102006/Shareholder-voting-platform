@@ -27,15 +27,20 @@ const ProtectedAdminRoute = () => {
                     .eq("user_id", session.user.id)
                     .maybeSingle();
 
-                if (error) {
-                    console.error("Error checking admin status:", error);
+                if (error || !data) {
                     setIsAdmin(false);
-                } else if (data) {
-                    setIsAdmin(true);
+                    setLoading(false);
+                    return;
+                }
+
+                // Enforce Server-Side 2FA Verification via PostgreSQL RPC
+                // Decision is made entirely on the database server; browser sessionStorage cannot bypass this
+                const { data: is2FaVerified, error: rpcError } = await supabase.rpc("check_company_admin_2fa_status");
+
+                if (rpcError || !is2FaVerified) {
+                    setIsAdmin(false);
                 } else {
-                    // User is logged in but not an admin (e.g. might be a shareholder if we merge auth systems later)
-                    // For now, if they are not in company_admins, they are not authorized for these routes.
-                    setIsAdmin(false);
+                    setIsAdmin(true);
                 }
             } catch (error) {
                 console.error("Auth check failed:", error);
@@ -62,15 +67,7 @@ const ProtectedAdminRoute = () => {
     }
 
     if (!isAdmin) {
-        toast.error("Unauthorized access. Please login as a company administrator.");
-        return <Navigate to="/company-login" replace />;
-    }
-
-    // Enforce 2-Step OTP Verification
-    const is2FaVerified = typeof window !== 'undefined' && sessionStorage.getItem("company_2fa_verified") === "true";
-    if (!is2FaVerified) {
-        toast.error("Security check failed. Please complete the login verification.");
-        // Sign out to clear the partial session
+        toast.error("Unauthorized access or 2FA verification required. Please log in.");
         supabase.auth.signOut();
         return <Navigate to="/company-login" replace />;
     }

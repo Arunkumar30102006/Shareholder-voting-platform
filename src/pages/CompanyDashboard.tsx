@@ -12,8 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import {
   Building2,
   Users,
@@ -790,9 +788,8 @@ const CompanyDashboard = () => {
         canonical="/company-dashboard"
         noindex={true}
       />
-      <Navbar />
 
-      <main className="pt-28 pb-20">
+      <main className="pt-32 pb-20">
         <div className="container mx-auto px-4 max-w-7xl">
           
           {/* Header Bar */}
@@ -1774,8 +1771,6 @@ const CompanyDashboard = () => {
 
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEO } from "@/components/layout/SEO";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -38,9 +36,8 @@ const AIPowerSuite = () => {
         canonical="/ai-power-suite"
         noindex={true}
       />
-      <Navbar />
 
-      <main className="pt-28 pb-20 flex-1">
+      <main className="pt-32 pb-20 flex-1">
         {/* Ambient Glows */}
         <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-purple-600/20 via-cyan-500/15 to-transparent rounded-full blur-[140px]" />
@@ -226,8 +223,6 @@ const AIPowerSuite = () => {
 
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

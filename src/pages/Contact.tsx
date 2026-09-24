@@ -11,12 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { env } from "@/config/env";
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
+import { TurnstileWidget, TurnstileWidgetRef } from "@/components/common/TurnstileWidget";
 
 // JSON-LD Structured Data for Contact Page
 const contactPageSchema = {
@@ -133,6 +134,8 @@ const Contact = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [copiedTicket, setCopiedTicket] = useState(false);
   const [submittedTicket, setSubmittedTicket] = useState<SubmittedTicket | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<TurnstileWidgetRef>(null);
   const [formData, setFormData] = useState({
     name: "",
     organization: "",
@@ -160,6 +163,11 @@ const Contact = () => {
       return;
     }
 
+    if (!turnstileToken) {
+      toast.error("Please complete the security verification challenge before submitting.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -174,7 +182,8 @@ const Contact = () => {
         name: formData.name,
         company: formData.organization,
         phone: formData.phone,
-        inquiryType: formData.inquiryType
+        inquiryType: formData.inquiryType,
+        turnstile_token: turnstileToken,
       };
 
       const { data, error } = await supabase.functions.invoke('send-contact-message', {
@@ -201,7 +210,11 @@ const Contact = () => {
 
       toast.success(`Inquiry registered! Reference ID: #${generatedTicketId}. Confirmation email sent to ${formData.email}.`);
       setFormData({ name: "", organization: "", email: "", phone: "", inquiryType: "", subject: "", message: "" });
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
     } catch (error: unknown) {
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       toast.error((error as Error).message || "Failed to send message. Please email support@shareholdervoting.in directly.");
     } finally {
       setIsSubmitting(false);
@@ -637,6 +650,16 @@ const Contact = () => {
                       </p>
                     </motion.div>
                   )}
+
+                  {/* Cloudflare Turnstile Bot Protection */}
+                  <TurnstileWidget
+                    ref={turnstileRef}
+                    action="contact"
+                    theme="dark"
+                    onSuccess={(tok) => setTurnstileToken(tok)}
+                    onError={() => setTurnstileToken("")}
+                    onExpire={() => setTurnstileToken("")}
+                  />
 
                   <Button
                     type="submit"

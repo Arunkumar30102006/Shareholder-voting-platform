@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, validateOrigin } from "../_shared/cors.ts";
 import { escapeHtml } from "../_shared/crypto.ts";
+import { verifyTurnstileToken } from "../_shared/turnstile.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -19,7 +20,21 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { email, companyName, cin, adminName, address, phone, regId } = await req.json();
+    const body = await req.json();
+    const { email, companyName, cin, adminName, address, phone, regId } = body;
+    const turnstileToken = (typeof body.turnstile_token === "string" ? body.turnstile_token : body.turnstileToken) || "";
+
+    // 0. Enforce Cloudflare Turnstile bot verification BEFORE sending welcome email
+    const clientIp = req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp);
+
+    if (!turnstileResult.success) {
+      return new Response(
+        JSON.stringify({ error: turnstileResult.error || "Turnstile verification failed. Please complete the security challenge." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const FRONTEND_URL = "https://www.shareholdervoting.in";
 
     if (!email || !companyName) {

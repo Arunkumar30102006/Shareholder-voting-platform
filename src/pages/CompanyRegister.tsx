@@ -1,17 +1,16 @@
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
   CheckCircle2, XCircle, ChevronRight, Upload, X, AlertCircle, Building2,
   FileText, ShieldCheck, FileKey, CheckSquare, UploadCloud, UserCircle, Loader2
 } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { SEO } from "@/components/layout/SEO";
 import { Head as Helmet } from "vite-react-ssg";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TurnstileWidget, TurnstileWidgetRef } from "@/components/common/TurnstileWidget";
 
 export interface FormDataState {
   companyName: string;
@@ -265,6 +264,8 @@ export default function CompanyRegister() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [regId, setRegId] = useState("");
   const [generatedPassword, setGeneratedPassword] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<TurnstileWidgetRef>(null);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -416,6 +417,12 @@ export default function CompanyRegister() {
   const submitForm = async (e: FormEvent) => {
     e.preventDefault();
     if (!formData.declaration || !formData.consent) return;
+
+    if (!turnstileToken) {
+      toast.error("Please complete the security verification challenge before submitting.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -539,13 +546,16 @@ export default function CompanyRegister() {
           address: formData.address,
           phone: formData.adminPhone,
           regId: newRegId,
-          password: "The password you set during registration"
+          password: "The password you set during registration",
+          turnstile_token: turnstileToken,
         }
       });
 
       toast.success("Registration successful! Welcome email sent.");
       setIsSuccess(true);
     } catch (error: unknown) {
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       console.error("Registration error:", error);
       toast.error((error as Error).message, { duration: 8000 });
     } finally {
@@ -560,7 +570,6 @@ export default function CompanyRegister() {
         description="Register your corporate enterprise, private limited company, or RTA to conduct secure electronic shareholder voting in compliance with MCA and SEBI guidelines."
         canonical="/company-register"
       />
-      <Navbar />
 
       <main className="container mx-auto px-4 max-w-4xl">
         {!isSuccess ? (
@@ -796,6 +805,16 @@ export default function CompanyRegister() {
                       </label>
                     </div>
 
+                    {/* Cloudflare Turnstile Bot Protection */}
+                    <TurnstileWidget
+                      ref={turnstileRef}
+                      action="company-register"
+                      theme="dark"
+                      onSuccess={(tok) => setTurnstileToken(tok)}
+                      onError={() => setTurnstileToken("")}
+                      onExpire={() => setTurnstileToken("")}
+                    />
+
                     <div className="flex justify-between items-center">
                       <Button variant="outline" size="lg" onClick={() => setStep(4)} className="border-white/10" disabled={isSubmitting}>Back</Button>
                       <Button size="lg" className="px-8 bg-emerald-600 hover:bg-emerald-700 text-white" disabled={!formData.declaration || !formData.consent || isSubmitting} onClick={submitForm}>
@@ -856,7 +875,6 @@ export default function CompanyRegister() {
           </motion.div>
         )}
       </main>
-      <Footer />
     </div>
   );
 }

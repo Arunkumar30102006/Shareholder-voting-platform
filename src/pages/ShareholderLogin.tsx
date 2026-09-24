@@ -1,5 +1,5 @@
 import { SEO } from "@/components/layout/SEO";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import {
   Shield,
   Lock,
@@ -35,6 +33,7 @@ import { env } from "@/config/env";
 import { useTranslation } from "react-i18next";
 import { votingApi } from "@/services/api/voting";
 import AnimatedOtpVerification, { VerifyResult } from "@/components/auth/AnimatedOtpVerification";
+import { TurnstileWidget, TurnstileWidgetRef } from "@/components/common/TurnstileWidget";
 import { createBreadcrumbSchema } from "@/components/layout/StructuredData";
 
 const breadcrumbSchema = createBreadcrumbSchema([
@@ -52,6 +51,10 @@ export const ShareholderLogin = () => {
   const [loginStep, setLoginStep] = useState<"CREDENTIALS" | "OTP">("CREDENTIALS");
   const [maskedEmail, setMaskedEmail] = useState("");
   const [showHelpModal, setShowHelpModal] = useState(false);
+
+  // Cloudflare Turnstile Bot Protection State
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
+  const turnstileRef = useRef<TurnstileWidgetRef>(null);
 
   // Secure Server Challenge State
   const [challengeId, setChallengeId] = useState<string | null>(null);
@@ -150,8 +153,13 @@ export const ShareholderLogin = () => {
       return;
     }
 
+    if (!turnstileToken) {
+      toast.error("Security verification required. Please complete the security challenge below.");
+      return;
+    }
+
     try {
-      const res = await votingApi.initiateAuth(cleanId, cleanPass);
+      const res = await votingApi.initiateAuth(cleanId, cleanPass, turnstileToken);
       setChallengeId(res.challenge_id);
       setLastIdentifier(cleanId);
       setLastPan(cleanPass);
@@ -160,6 +168,8 @@ export const ShareholderLogin = () => {
         description: res.message,
       });
     } catch (err: unknown) {
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       const msg = err instanceof Error ? err.message : "Authentication failed";
       toast.error("Authentication Notice", { description: msg });
     }
@@ -175,8 +185,13 @@ export const ShareholderLogin = () => {
       return;
     }
 
+    if (!turnstileToken) {
+      toast.error("Security verification required. Please complete the security challenge below.");
+      return;
+    }
+
     try {
-      const res = await votingApi.initiateAuth(cleanDemat, cleanPan);
+      const res = await votingApi.initiateAuth(cleanDemat, cleanPan, turnstileToken);
       setChallengeId(res.challenge_id);
       setLastIdentifier(cleanDemat);
       setLastPan(cleanPan);
@@ -185,6 +200,8 @@ export const ShareholderLogin = () => {
         description: res.message,
       });
     } catch (err: unknown) {
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       const msg = err instanceof Error ? err.message : "Authentication failed";
       toast.error("Authentication Notice", { description: msg });
     }
@@ -256,7 +273,6 @@ export const ShareholderLogin = () => {
         schemas={[breadcrumbSchema]}
         noindex={true}
       />
-      <Navbar />
 
       <main className="flex-grow pt-28 pb-20 flex items-center">
         <div className="container mx-auto px-4 max-w-6xl">
@@ -456,6 +472,16 @@ export const ShareholderLogin = () => {
                               <span>Protected by 256-Bit SSL • Depository Benpos Synchronized</span>
                             </div>
 
+                            {/* Cloudflare Turnstile Bot Protection */}
+                            <TurnstileWidget
+                              ref={turnstileRef}
+                              action="shareholder-login"
+                              theme="dark"
+                              onSuccess={(tok) => setTurnstileToken(tok)}
+                              onError={() => setTurnstileToken("")}
+                              onExpire={() => setTurnstileToken("")}
+                            />
+
                             <Button
                               type="submit"
                               size="lg"
@@ -534,6 +560,15 @@ export const ShareholderLogin = () => {
                               <Info className="w-3.5 h-3.5 inline mr-1 text-cyan-400" />
                               PAN is matched against the RTA register as on the statutory Record Date.
                             </div>
+
+                            {/* Cloudflare Turnstile Bot Protection */}
+                            <TurnstileWidget
+                              action="shareholder-login"
+                              theme="dark"
+                              onSuccess={(tok) => setTurnstileToken(tok)}
+                              onError={() => setTurnstileToken("")}
+                              onExpire={() => setTurnstileToken("")}
+                            />
 
                             <Button
                               type="submit"
@@ -620,8 +655,6 @@ export const ShareholderLogin = () => {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

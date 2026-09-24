@@ -79,6 +79,12 @@ export const AnimatedOtpVerification: React.FC<AnimatedOtpVerificationProps> = (
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const isVerifyingRef = useRef<boolean>(false);
+  const lastAttemptedCodeRef = useRef<string>("");
+  const phaseRef = useRef<OtpPhase>(disabled ? "disabled" : "idle");
+
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
   // Theme styling configuration
   const theme = {
@@ -152,8 +158,9 @@ export const AnimatedOtpVerification: React.FC<AnimatedOtpVerificationProps> = (
   // Handle actual verification execution
   const executeVerification = useCallback(
     async (codeToVerify: string) => {
-      if (isVerifyingRef.current || phase === "success") return;
+      if (isVerifyingRef.current || phaseRef.current === "success") return;
       isVerifyingRef.current = true;
+      lastAttemptedCodeRef.current = codeToVerify;
       setPhase("verifying");
       setErrorMessage("");
 
@@ -193,7 +200,7 @@ export const AnimatedOtpVerification: React.FC<AnimatedOtpVerificationProps> = (
         isVerifyingRef.current = false;
       }
     },
-    [onVerify, onSuccess, phase]
+    [onVerify, onSuccess]
   );
 
   // Auto-submit when all boxes are populated
@@ -204,7 +211,10 @@ export const AnimatedOtpVerification: React.FC<AnimatedOtpVerificationProps> = (
       fullCode.length === length &&
       phase !== "verifying" &&
       phase !== "success" &&
-      !isVerifyingRef.current
+      phase !== "error" &&
+      phase !== "expired" &&
+      !isVerifyingRef.current &&
+      lastAttemptedCodeRef.current !== fullCode
     ) {
       // Small pause before triggering verification for natural UX feel
       const timeout = setTimeout(() => {
@@ -218,6 +228,8 @@ export const AnimatedOtpVerification: React.FC<AnimatedOtpVerificationProps> = (
   const handleChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const rawVal = e.target.value;
     const cleanDigits = rawVal.replace(/\D/g, "");
+
+    lastAttemptedCodeRef.current = "";
 
     if (!cleanDigits) {
       const newDigits = [...digits];
@@ -253,6 +265,7 @@ export const AnimatedOtpVerification: React.FC<AnimatedOtpVerificationProps> = (
 
     if (e.key === "Backspace") {
       e.preventDefault();
+      lastAttemptedCodeRef.current = "";
       const newDigits = [...digits];
 
       if (digits[index]) {
@@ -292,11 +305,13 @@ export const AnimatedOtpVerification: React.FC<AnimatedOtpVerificationProps> = (
     const pastedData = e.clipboardData.getData("text/plain");
     const cleanDigits = pastedData.replace(/\D/g, "");
     if (cleanDigits) {
+      lastAttemptedCodeRef.current = "";
       handlePasteDigits(cleanDigits, 0);
     }
   };
 
   const handlePasteDigits = (cleanDigits: string, startIndex: number) => {
+    lastAttemptedCodeRef.current = "";
     const newDigits = [...digits];
     let insertIndex = startIndex;
 
@@ -323,6 +338,7 @@ export const AnimatedOtpVerification: React.FC<AnimatedOtpVerificationProps> = (
   const handleResend = async () => {
     if (!canResend || phase === "resending" || phase === "verifying") return;
 
+    lastAttemptedCodeRef.current = "";
     setPhase("resending");
     setErrorMessage("");
 

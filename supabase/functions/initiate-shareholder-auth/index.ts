@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { getCorsHeaders, validateOrigin } from "../_shared/cors.ts";
 import { generateSecureOtp, hmacSha256, escapeHtml } from "../_shared/crypto.ts";
+import { verifyTurnstileToken } from "../_shared/turnstile.ts";
 
 serve(async (req: Request) => {
   const corsHeaders = getCorsHeaders(req);
@@ -18,6 +19,22 @@ serve(async (req: Request) => {
   }
 
   try {
+    const body = await req.json();
+    const identifier = typeof body.identifier === "string" ? body.identifier.trim() : "";
+    const pan = typeof body.pan === "string" ? body.pan.trim().toUpperCase() : "";
+    const turnstileToken = (typeof body.turnstile_token === "string" ? body.turnstile_token : body.turnstileToken) || "";
+
+    // 1. Enforce Cloudflare Turnstile bot verification BEFORE expensive DB queries or OTP dispatch
+    const clientIp = req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp);
+
+    if (!turnstileResult.success) {
+      return new Response(
+        JSON.stringify({ error: turnstileResult.error || "Turnstile verification failed. Please complete the security challenge." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const OTP_HMAC_SECRET = Deno.env.get("OTP_HMAC_SECRET");
     if (!OTP_HMAC_SECRET) {
       console.error("FATAL: OTP_HMAC_SECRET is missing. Failing closed.");
@@ -38,10 +55,6 @@ serve(async (req: Request) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const body = await req.json();
-    const identifier = typeof body.identifier === "string" ? body.identifier.trim() : "";
-    const pan = typeof body.pan === "string" ? body.pan.trim().toUpperCase() : "";
 
     if (!identifier || !pan) {
       return new Response(

@@ -6,8 +6,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { SEO } from "@/components/layout/SEO";
 import { createBreadcrumbSchema } from "@/components/layout/StructuredData";
 
@@ -141,7 +139,6 @@ export default function Demo() {
         canonical="/demo"
         schemas={[breadcrumbSchema]}
       />
-      <Navbar />
       <main className="container mx-auto px-4 pt-28 pb-16 md:py-20">
         
         <div className="text-center mb-8">
@@ -461,7 +458,6 @@ export default function Demo() {
         </div>
 
       </main>
-      <Footer />
     </div>
   );
 }

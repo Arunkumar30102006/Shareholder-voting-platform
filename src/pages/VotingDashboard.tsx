@@ -2,8 +2,6 @@ import { useState, useCallback, useEffect, useMemo, lazy, Suspense } from "react
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import {
   Vote,
   CheckCircle2,
@@ -462,9 +460,8 @@ const VotingDashboard = () => {
         canonical="/voting-dashboard"
         noindex={true}
       />
-      <Navbar />
 
-      <main className="pt-24 pb-16">
+      <main className="pt-32 pb-16">
         <div className="container mx-auto px-4 max-w-6xl">
 
           {/* Sticky Header / Breadcrumbs */}
@@ -836,8 +833,6 @@ const VotingDashboard = () => {
 
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
