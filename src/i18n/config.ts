@@ -1,23 +1,24 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import enTranslation from './locales/en.json';
 
-// Initialize i18n immediately with empty resources so React can mount,
-// then load translations dynamically to keep them off the critical path.
+// Initialize i18n synchronously with English translations
+// so that server-rendered HTML (SSG) and client hydration match 1:1,
+// preventing React hydration errors #425, #418, and #423.
 i18n
     .use(initReactI18next)
     .init({
-        resources: {},
+        resources: {
+            en: {
+                translation: (enTranslation as any).translation || enTranslation,
+            },
+        },
         lng: 'en',
         fallbackLng: 'en',
         interpolation: {
             escapeValue: false, // react already safes from xss
         },
     });
-
-// Lazy-load translations after initial paint (removes 33KB from critical bundle)
-import('./locales/en.json').then((enTranslation) => {
-    i18n.addResourceBundle('en', 'translation', enTranslation.default?.translation || enTranslation.default || enTranslation, true, true);
-});
 
 export default i18n;
 
