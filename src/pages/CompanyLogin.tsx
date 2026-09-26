@@ -120,13 +120,25 @@ const CompanyLogin = () => {
           turnstileRef.current?.reset();
           setTurnstileToken("");
           console.error("2FA initiation error:", initError || initData);
+
+          let serverErrorMsg = initData?.error;
+          if (!serverErrorMsg && initError) {
+            try {
+              const errContext = await (initError as any)?.context?.json?.();
+              serverErrorMsg = errContext?.error || initError.message;
+            } catch {
+              serverErrorMsg = initError.message;
+            }
+          }
+
           toast.error("Failed to initiate two-factor authentication.", {
-            description: initData?.error || "Please ensure the administrator email service is configured."
+            description: serverErrorMsg || "Please ensure the administrator email service is configured."
           });
           await supabase.auth.signOut();
           setIsLoading(false);
           return;
         }
+
 
         setChallengeId(initData.challenge_id);
         if (initData.company_name) {
@@ -218,7 +230,18 @@ const CompanyLogin = () => {
       });
 
       if (initError || !initData?.success || !initData?.challenge_id) {
-        toast.error("Failed to resend verification code. Please try again.");
+        let serverErrorMsg = initData?.error;
+        if (!serverErrorMsg && initError) {
+          try {
+            const errContext = await (initError as any)?.context?.json?.();
+            serverErrorMsg = errContext?.error || initError.message;
+          } catch {
+            serverErrorMsg = initError.message;
+          }
+        }
+        toast.error("Failed to resend verification code", {
+          description: serverErrorMsg || "Please try again."
+        });
         return false;
       }
 
@@ -362,8 +385,8 @@ const CompanyLogin = () => {
                       <Button
                         type="submit"
                         variant="hero"
-                        className="w-full gap-2 mt-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-none shadow-lg shadow-orange-500/25"
-                        disabled={isLoading}
+                        className="w-full gap-2 mt-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-none shadow-lg shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isLoading || !turnstileToken}
                       >
                         {isLoading ? (
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

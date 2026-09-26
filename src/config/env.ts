@@ -5,7 +5,7 @@ export const env = {
     VITE_SUPABASE_ANON_KEY: (import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) as string,
     IS_DEV: import.meta.env.DEV,
     APP_URL: typeof window !== 'undefined' ? window.location.origin : 'https://www.shareholdervoting.in',
-    TURNSTILE_SITE_KEY: (import.meta.env.VITE_TURNSTILE_SITE_KEY as string) || "1x00000000000000000000AA",
+    TURNSTILE_SITE_KEY: (import.meta.env.VITE_TURNSTILE_SITE_KEY as string) || "0x4AAAAAAFCesI_my84noZlf",
 };
 
 if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
