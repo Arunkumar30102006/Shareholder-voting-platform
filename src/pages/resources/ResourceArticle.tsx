@@ -4,6 +4,10 @@ import { createBreadcrumbSchema } from "@/components/layout/StructuredData";
 import { RESOURCE_ARTICLES } from "./articlesData";
 import { BookOpen, Calendar, Clock, Scale, ArrowRight, ArrowLeft } from "lucide-react";
 
+// E-E-A-T: Fill in Company Secretary / Legal Reviewer when available.
+// If empty, only Governance Desk authorship is rendered with no placeholder text.
+const CS_REVIEWER_NAME = "";
+
 export default function ResourceArticle() {
   const { slug } = useParams<{ slug: string }>();
   const article = slug ? RESOURCE_ARTICLES[slug] : undefined;
@@ -59,6 +63,27 @@ export default function ResourceArticle() {
             <p className="text-base sm:text-lg text-slate-300 leading-relaxed font-normal p-6 rounded-2xl bg-[#0d1b2a]/80 border border-white/10">
               {article.summary}
             </p>
+
+            {/* E-E-A-T: Author / Reviewer Byline */}
+            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-4 p-4 rounded-xl bg-white/[0.03] border border-white/10">
+              <span className="flex items-center gap-1.5 font-medium text-slate-200">
+                <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+                Authored by Vote India Secure Governance Desk
+              </span>
+              {CS_REVIEWER_NAME && (
+                <>
+                  <span className="text-slate-600">•</span>
+                  <span className="flex items-center gap-1.5 font-medium text-slate-200">
+                    <Scale className="w-3.5 h-3.5 text-emerald-400" />
+                    Reviewed by {CS_REVIEWER_NAME}
+                  </span>
+                </>
+              )}
+              <span className="text-slate-600">•</span>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-slate-500" /> Last reviewed: {article.lastReviewedDate}
+              </span>
+            </div>
           </div>
 
           {/* Article Body */}

@@ -2,6 +2,10 @@ import { Link } from "react-router-dom";
 import { Shield, Lock, Mail, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+// E-E-A-T: Fill in registered company/LLP name when available.
+// If empty, only the brand name is shown with no placeholder.
+const ENTITY_NAME = "";
+
 const Footer = () => {
   const { t } = useTranslation();
   return (
@@ -125,8 +129,10 @@ const Footer = () => {
       {/* Bottom Bar */}
       <div className="border-t border-white/10">
         <div className="container mx-auto px-4 py-5">
-          <div className="flex items-center justify-center text-center text-sm text-slate-300 font-medium">
-            <p>© 2026 Vote India Secure. All rights reserved.</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center text-sm text-slate-300 font-medium">
+            <p>© 2026 Vote India Secure{ENTITY_NAME ? ` · ${ENTITY_NAME}` : ""}</p>
+            <span className="hidden sm:inline text-slate-600">·</span>
+            <Link to="/about" className="text-cyan-400 hover:text-cyan-300 text-xs font-semibold transition-colors">About Us</Link>
           </div>
         </div>
       </div>

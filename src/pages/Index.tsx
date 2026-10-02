@@ -128,8 +128,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-[#020817] text-white selection:bg-blue-500/30">
       <SEO
-        title="Shareholder E-Voting Platform for AGMs & EGMs | Vote India Secure"
-        description="Secure corporate voting software for Annual General Meetings (AGM), EGMs, and postal ballots with cryptographic ballot integrity and independent scrutinizer reporting."
+        title="E-Voting Platform for AGM & EGM | Vote India Secure"
+        description="Secure e-voting software for AGMs, EGMs and postal ballots in India. SHA-256 sealed ballots, Section 108 workflows and MGT-13 aligned scrutinizer reports."
         canonical="/"
         schemas={[organizationSchema, webSiteSchema, homepageSoftwareOrgGraphSchema, createFaqSchema(faqItems)]}
       />
@@ -628,26 +628,27 @@ const Index = () => {
 
           <div className="grid md:grid-cols-2 gap-6">
             {featuredResources.map((res) => (
-              <Link 
-                key={res.href} 
-                to={res.href}
+              <div
+                key={res.href}
                 className="p-7 rounded-3xl bg-[#0d1b2a]/80 border border-white/15 hover:border-blue-400/40 transition-all duration-300 shadow-xl group flex flex-col justify-between"
               >
                 <div>
                   <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-cyan-300 text-xs font-semibold mb-3 border border-white/15">
                     {res.tag}
                   </span>
-                  <h3 className="text-lg md:text-xl font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">
-                    {res.title}
+                  <h3 className="text-lg md:text-xl font-bold mb-2">
+                    <Link to={res.href} className="text-white hover:text-cyan-300 transition-colors">
+                      {res.title}
+                    </Link>
                   </h3>
                   <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-4">
                     {res.desc}
                   </p>
                 </div>
-                <div className="text-xs font-semibold text-cyan-400 flex items-center gap-1">
+                <Link to={res.href} className="text-xs font-semibold text-cyan-400 flex items-center gap-1 hover:text-cyan-300 transition-colors" tabIndex={-1} aria-hidden="true">
                   Read Statutory Guide <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Link>
+                </Link>
+              </div>
             ))}
           </div>
 

@@ -13,12 +13,18 @@ const breadcrumbSchema = createBreadcrumbSchema([
   { name: "About Us", url: "/about" }
 ]);
 
+// E-E-A-T Entity Details: Fill in when registered company/LLP details are available.
+// If left empty, the section is cleanly hidden so no placeholders display.
+const ENTITY_NAME = "";
+const ENTITY_TYPE = "";
+const ENTITY_ADDRESS = "";
+
 const About = () => {
   return (
     <div className="min-h-screen pt-24 pb-20 bg-[#020817] text-white">
       <SEO
-        title="About Us | Vote India Secure Shareholder Voting Platform"
-        description="Learn about Vote India Secure's mission, open-source technology architecture, cryptographic security model, and statutory alignment for Indian shareholder voting."
+        title="About Us | Vote India Secure"
+        description="Meet the team behind Vote India Secure: our engineering mission, cryptographic security model and statutory alignment for Indian shareholder e-voting."
         canonical="/about"
         schemas={[breadcrumbSchema]}
       />
@@ -38,6 +44,47 @@ const About = () => {
           </p>
         </div>
       </section>
+
+      {/* Legal Entity & Registered Office (E-E-A-T) - rendered only if ENTITY_NAME is configured */}
+      {ENTITY_NAME && (
+        <section className="container mx-auto px-4 max-w-5xl mb-20" id="legal-entity">
+          <div className="bg-[#0d1b2a]/90 border border-white/15 rounded-3xl p-8 md:p-12 shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center gap-3 mb-6">
+              <Building2 className="w-6 h-6 text-cyan-400" />
+              <h2 className="text-2xl md:text-3xl font-black text-white">Legal Entity & Registered Office</h2>
+            </div>
+            <dl className="grid sm:grid-cols-2 gap-6 text-sm text-slate-200">
+              <div>
+                <dt className="text-slate-400 font-medium mb-1">Legal Entity Name</dt>
+                <dd className="font-semibold text-white">{ENTITY_NAME}</dd>
+              </div>
+              {ENTITY_TYPE && (
+                <div>
+                  <dt className="text-slate-400 font-medium mb-1">Registration Type</dt>
+                  <dd className="font-semibold text-white">{ENTITY_TYPE}</dd>
+                </div>
+              )}
+              {ENTITY_ADDRESS && (
+                <div className="sm:col-span-2">
+                  <dt className="text-slate-400 font-medium mb-1">Registered Address</dt>
+                  <dd className="font-semibold text-white">{ENTITY_ADDRESS}</dd>
+                </div>
+              )}
+              <div>
+                <dt className="text-slate-400 font-medium mb-1">Support Email</dt>
+                <dd className="font-semibold text-white">support@shareholdervoting.in</dd>
+              </div>
+              <div>
+                <dt className="text-slate-400 font-medium mb-1">Admin Email</dt>
+                <dd className="font-semibold text-white">admin@shareholdervoting.in</dd>
+              </div>
+            </dl>
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-amber-200 text-sm mt-6">
+              <strong>Transparency Note:</strong> Vote India Secure is an independent engineering initiative and technology demonstration. It is not affiliated with, endorsed by, or certified by SEBI, NSDL, or CDSL.
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Project Genesis & Transparent Disclaimer */}
       <section className="container mx-auto px-4 max-w-5xl mb-20">

@@ -8,6 +8,7 @@ interface SEOProps {
   type?: string;
   name?: string;
   image?: string;
+  /** @deprecated keywords meta tag is ignored by Google — not rendered */
   keywords?: string;
   schema?: object;
   schemas?: object[];
@@ -21,7 +22,6 @@ export const SEO = ({
   type,
   name = 'Vote India Secure',
   image,
-  keywords,
   schema,
   schemas,
   noindex = false,
@@ -36,11 +36,10 @@ export const SEO = ({
   // Lookup route configuration fallback
   const config = SEO_CONFIG[normalizedPath];
 
-  const resolvedTitle = title || config?.title || 'Shareholder E-Voting Platform | Vote India Secure';
-  const resolvedDescription = description || config?.description || 'Secure corporate electronic voting platform for general meetings, AGMs, and EGMs.';
+  const resolvedTitle = title || config?.title || 'E-Voting Platform for AGM & EGM | Vote India Secure';
+  const resolvedDescription = description || config?.description || 'Secure e-voting software for AGMs, EGMs and postal ballots in India. SHA-256 sealed ballots, Section 108 workflows and MGT-13 aligned scrutinizer reports.';
   const resolvedType = type || config?.ogType || 'website';
   const resolvedImage = image || config?.ogImage || `${SITE_URL}/og-image.jpg`;
-  const resolvedKeywords = keywords || 'shareholder e-voting platform, online shareholder voting, AGM e-voting, EGM e-voting, corporate voting software, electronic voting platform India, scrutinizer reporting';
 
   // Ensure canonical URL is always absolute and normalized to production domain
   const canonicalUrl = `${SITE_URL}${normalizedPath === '/' ? '/' : normalizedPath}`;
@@ -61,7 +60,6 @@ export const SEO = ({
     <Head>
       <title>{fullTitle}</title>
       <meta name="description" content={resolvedDescription} />
-      <meta name="keywords" content={resolvedKeywords} />
       <meta name="author" content={name} />
 
       {noindex ? (

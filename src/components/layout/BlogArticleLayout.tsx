@@ -54,7 +54,6 @@ export const BlogArticleLayout = ({
         description={description}
         canonical={canonical}
         type="article"
-        keywords={keywords}
         schemas={[articleSchema, breadcrumbSchema]}
       />
 

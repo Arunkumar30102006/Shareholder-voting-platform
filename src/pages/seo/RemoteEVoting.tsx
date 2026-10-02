@@ -58,8 +58,8 @@ const remoteFaqSchema = createFaqSchema(
 );
 
 const webPageSchema = createWebPageSchema({
-  name: "Remote E-Voting Guide | Companies Act Rule 20 & SEBI LODR",
-  description: "Comprehensive guide to Remote E-Voting under Companies Act Rule 20 & SEBI LODR Regulation 44: statutory timelines, cut-off dates, vote locking, and scrutinizer unblocking.",
+  name: "Remote E-Voting Under Rule 20 | Vote India Secure",
+  description: "Remote e-voting platform for pre-meeting shareholder ballots under Rule 20(4). Three-day voting window, cut-off date validation and encrypted submissions.",
   url: "/remote-e-voting",
 });
 
@@ -73,8 +73,8 @@ export const RemoteEVoting = () => {
   return (
     <div className="min-h-screen bg-[#020817] text-white selection:bg-blue-500/30">
       <SEO
-        title="Remote E-Voting Guide | Companies Act Rule 20 & SEBI LODR"
-        description="Comprehensive guide to Remote E-Voting under Companies Act Rule 20 & SEBI LODR Regulation 44: statutory timelines, cut-off dates, vote locking, and scrutinizer unblocking."
+        title="Remote E-Voting Under Rule 20 | Vote India Secure"
+        description="Remote e-voting platform for pre-meeting shareholder ballots under Rule 20(4). Three-day voting window, cut-off date validation and encrypted submissions."
         canonical="/remote-e-voting"
         schemas={[breadcrumbSchema, remoteFaqSchema, webPageSchema]}
       />
@@ -89,19 +89,19 @@ export const RemoteEVoting = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-6">
               <Scale className="w-4 h-4 text-cyan-400" />
-              <span>Statutory E-Voting Framework</span>
+              <span>Rule 20(4) Statutory E-Voting Framework</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight">
-              Understanding{" "}
+              Remote E-Voting{" "}
               <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300 bg-clip-text text-transparent">
-                Remote E-Voting
+                Under Rule 20
               </span>{" "}
               in India
             </h1>
 
             <p className="text-base sm:text-xl text-slate-200 max-w-3xl mx-auto font-normal leading-relaxed mb-10">
-              A comprehensive technical and regulatory guide to remote electronic voting under Section 108 of the Companies Act, 2013, Rule 20 of Companies (M&amp;A) Rules, 2014, and SEBI LODR Regulation 44.
+              A comprehensive technical and statutory platform for remote electronic voting under Rule 20 of Companies (Management and Administration) Rules, 2014 and Section 108 of the Companies Act, featuring 3-day pre-meeting voting windows, cut-off date validation, and scrutinizer unblocking.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

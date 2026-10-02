@@ -51,8 +51,8 @@ const agmFaqSchema = createFaqSchema(
 );
 
 const webPageSchema = createWebPageSchema({
-  name: "AGM E-Voting Guide | Annual General Meetings Under Companies Act",
-  description: "Complete guide to Annual General Meeting (AGM) e-voting under Companies Act Section 96, 108 & Rule 20: remote voting windows, InstaPolls, and Form MGT-13 reports.",
+  name: "AGM Voting Software | Section 96 Compliant",
+  description: "Annual General Meeting voting platform with pre-AGM remote polls, InstaPoll venue voting and Form MGT-13 scrutinizer exports. Section 96 & 108 aligned.",
   url: "/agm-voting",
 });
 
@@ -66,8 +66,8 @@ export const AgmVoting = () => {
   return (
     <div className="min-h-screen bg-[#020817] text-white selection:bg-blue-500/30">
       <SEO
-        title="AGM E-Voting Guide | Annual General Meetings Under Companies Act"
-        description="Complete guide to Annual General Meeting (AGM) e-voting under Companies Act Section 96, 108 & Rule 20: remote voting windows, InstaPolls, and Form MGT-13 reports."
+        title="AGM Voting Software | Section 96 Compliant"
+        description="Annual General Meeting voting platform with pre-AGM remote polls, InstaPoll venue voting and Form MGT-13 scrutinizer exports. Section 96 & 108 aligned."
         canonical="/agm-voting"
         schemas={[breadcrumbSchema, agmFaqSchema, webPageSchema]}
       />
@@ -82,7 +82,7 @@ export const AgmVoting = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-6">
               <Calendar className="w-4 h-4 text-cyan-400" />
-              <span>Annual General Meeting Governance</span>
+              <span>Section 96 &amp; 108 Statutory AGM Governance</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight">
@@ -90,11 +90,11 @@ export const AgmVoting = () => {
               <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300 bg-clip-text text-transparent">
                 (AGM) E-Voting
               </span>{" "}
-              Guide
+              Software
             </h1>
 
             <p className="text-base sm:text-xl text-slate-200 max-w-3xl mx-auto font-normal leading-relaxed mb-10">
-              A comprehensive operational and statutory guide to conducting Annual General Meetings with remote e-voting, virtual meeting InstaPolls, and independent Scrutinizer reporting under Section 108 and Rule 20.
+              A comprehensive operational and statutory platform for conducting Annual General Meetings compliant with Section 96 and Section 108 of the Companies Act, featuring pre-AGM remote polls, live virtual InstaPolls, and automated Form MGT-13 scrutinizer reports.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

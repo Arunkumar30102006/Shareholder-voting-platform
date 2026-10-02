@@ -20,12 +20,18 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/layout/SEO";
-import { createBreadcrumbSchema, createFaqSchema } from "@/components/layout/StructuredData";
+import { createBreadcrumbSchema, createFaqSchema, createWebPageSchema } from "@/components/layout/StructuredData";
 
 const breadcrumbSchema = createBreadcrumbSchema([
   { name: "Home", url: "/" },
   { name: "Corporate Voting", url: "/corporate-voting" }
 ]);
+
+const webPageSchema = createWebPageSchema({
+  name: "Corporate Governance Voting Platform | Vote India Secure",
+  description: "Board election and resolution voting software with tamper-evident audit logs, SEBI LODR Regulation 44 mapping and institutional governance workflows.",
+  url: "/corporate-voting",
+});
 
 const corporateFaqs = [
   {
@@ -60,10 +66,10 @@ export const CorporateVoting = () => {
   return (
     <div className="min-h-screen bg-[#020817] text-white selection:bg-blue-500/30">
       <SEO
-        title="Corporate E-Voting & Issuer Governance Guide | Vote India Secure"
-        description="Comprehensive guide to corporate electronic voting for Indian enterprises: Benpos record ingestion, weighted voting power, resolution management, and Scrutinizer reports."
+        title="Corporate Governance Voting Platform | Vote India Secure"
+        description="Board election and resolution voting software with tamper-evident audit logs, SEBI LODR Regulation 44 mapping and institutional governance workflows."
         canonical="/corporate-voting"
-        schemas={[breadcrumbSchema, corporateFaqSchema]}
+        schemas={[breadcrumbSchema, corporateFaqSchema, webPageSchema]}
       />
 
       {/* Hero Section */}
@@ -76,18 +82,18 @@ export const CorporateVoting = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-xs font-bold uppercase tracking-wider mb-6">
               <Building className="w-4 h-4 text-purple-400" />
-              <span>Corporate Issuer Governance</span>
+              <span>SEBI LODR Regulation 44 &amp; Board Governance</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight">
-              Corporate E-Voting &amp;{" "}
+              Corporate Governance &amp;{" "}
               <span className="bg-gradient-to-r from-purple-400 via-blue-300 to-cyan-300 bg-clip-text text-transparent">
-                Issuer Governance
+                Board Voting Platform
               </span>
             </h1>
 
             <p className="text-base sm:text-xl text-slate-200 max-w-3xl mx-auto font-normal leading-relaxed mb-10">
-              A comprehensive technical guide for Corporate Secretarial teams, RTAs, and Board Administrators managing shareholder general meetings, depository synchronization, and statutory scrutinizer workflows.
+              A comprehensive corporate governance platform for board elections, director appointments, and shareholder resolutions—featuring SEBI LODR Regulation 44 compliance, CDSL/NSDL Benpos ingestion, and institutional voting workflows.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
