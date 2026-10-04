@@ -40,6 +40,7 @@ A comprehensive web application security assessment and penetration test was con
 | **SEC-TC-07** | Double-Submit CSRF Header | `POST /supabase-proxy/functions/v1/cast-vote` | High | PASS | ✅ SECURE (403 Missing CSRF Token) |
 | **SEC-TC-08** | Input Validation / Format Gate | `POST /supabase-proxy/functions/v1/verify-shareholder-otp` | Medium | PASS | ✅ SECURE (400 Format Validation) |
 | **SEC-TC-09** | Function Level Authorization | `POST /supabase-proxy/functions/v1/send-shareholder-credentials` | **High** | **FAIL (Open Relay)** | ✅ **PATCHED (401 Unauthorized)** |
+| **SEC-TC-10** | Browser Hardening / Clickjacking | `GET /shareholder-login` | Medium | PASS | ✅ SECURE (A+ Grade Security Headers) |
 
 ---
 
@@ -426,6 +427,43 @@ Content-Type: application/json
 {"error":"Invalid or expired session. Please log in as a company administrator."}
 ```
 **Status: FULLY MITIGATED.**
+
+---
+
+```
+================================================================================
+CASE ID: SEC-TC-10
+TITLE: Browser Security Headers & Anti-Clickjacking Defense Audit
+CATEGORY: Clickjacking / Cross-Origin Isolation / Transport Security
+SEVERITY: Medium
+RESULT: PASS (A+ Grade Security Posture)
+================================================================================
+```
+
+### Attack Scenario:
+1. **Clickjacking (UI Redressing):** An attacker embeds `www.shareholdervoting.in` inside a hidden, transparent `<iframe>` on a malicious website to trick authenticated shareholders or company admins into unknowingly clicking sensitive buttons.
+2. **MIME Sniffing:** An attacker tricks browsers into executing non-executable media as JavaScript.
+3. **SSL Stripping / MitM:** An attacker downgrades connections from HTTPS to unencrypted HTTP.
+
+### Proof of Concept:
+* **Request:**
+```http
+GET /shareholder-login HTTP/2
+Host: www.shareholdervoting.in
+```
+
+* **Server Response Headers Verified:**
+  * `X-Frame-Options: DENY` -> Blocks any framing or embedding in iframes (Anti-Clickjacking).
+  * `Content-Security-Policy: ... frame-ancestors 'none'; ...` -> Modern standard anti-framing directive.
+  * `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` -> 2-year forced HTTPS preload protection against SSL stripping.
+  * `X-Content-Type-Options: nosniff` -> Enforces strict MIME typing and blocks MIME-sniffing exploits.
+  * `Cross-Origin-Opener-Policy: same-origin` -> Cross-process memory isolation against Spectre/Meltdown attacks.
+  * `Cross-Origin-Resource-Policy: same-origin` -> Prevents unauthorized cross-origin reading.
+  * `Permissions-Policy: camera=(), microphone=(), geolocation=()` -> Denies unauthorized hardware sensor access.
+  * `Referrer-Policy: origin-when-cross-origin` -> Protects sensitive query parameters in URL referrers.
+
+### Defense Verification:
+The application achieves an A+ rated browser defense posture across all modern browser security specifications.
 
 ---
 
