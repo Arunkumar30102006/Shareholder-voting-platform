@@ -395,9 +395,6 @@ const CompanyDashboard = () => {
               companyName: company.company_name,
               loginId: loginId,
               password: password,
-            },
-            headers: {
-              "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}`
             }
           });
 
@@ -588,9 +585,6 @@ const CompanyDashboard = () => {
           companyName: company.company_name,
           loginId: shareholder.login_id,
           password: password,
-        },
-        headers: {
-          "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}`
         }
       });
 
@@ -638,9 +632,6 @@ const CompanyDashboard = () => {
             companyName: company.company_name,
             loginId: sh.login_id,
             password: password,
-          },
-          headers: {
-            "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}`
           }
         });
         successCount++;
