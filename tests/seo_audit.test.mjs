@@ -36,11 +36,11 @@ test("Rule 21: Prohibited regulatory and security claims are not present in publ
   ];
 
   const singleFiles = [
-    path.join(ROOT_DIR, "src", "pages", "Index.tsx"),
-    path.join(ROOT_DIR, "src", "pages", "Features.tsx"),
-    path.join(ROOT_DIR, "src", "components", "Navbar.tsx"),
-    path.join(ROOT_DIR, "src", "components", "Footer.tsx"),
-    path.join(ROOT_DIR, "src", "config", "seoConfig.ts"),
+    path.join(ROOT_DIR, "src", "pages", "Index.jsx"),
+    path.join(ROOT_DIR, "src", "pages", "Features.jsx"),
+    path.join(ROOT_DIR, "src", "components", "Navbar.jsx"),
+    path.join(ROOT_DIR, "src", "components", "Footer.jsx"),
+    path.join(ROOT_DIR, "src", "config", "seoConfig.js"),
   ];
 
   const filesToScan = [...singleFiles];
@@ -49,7 +49,7 @@ test("Rule 21: Prohibited regulatory and security claims are not present in publ
     if (fs.existsSync(dir)) {
       const entries = fs.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.isFile() && (entry.name.endsWith(".tsx") || entry.name.endsWith(".ts"))) {
+        if (entry.isFile() && (entry.name.endsWith(".jsx") || entry.name.endsWith(".js") || entry.name.endsWith(".tsx") || entry.name.endsWith(".ts"))) {
           filesToScan.push(path.join(dir, entry.name));
         }
       }
@@ -78,8 +78,10 @@ test("Rule 21: Prohibited regulatory and security claims are not present in publ
 });
 
 test("Canonical URLs are normalized to https://www.shareholdervoting.in with no trailing slash except root", async () => {
-  const seoConfigFile = path.join(ROOT_DIR, "src", "config", "seoConfig.ts");
-  assert.ok(fs.existsSync(seoConfigFile), "seoConfig.ts must exist");
+  const seoConfigFile = fs.existsSync(path.join(ROOT_DIR, "src", "config", "seoConfig.js"))
+    ? path.join(ROOT_DIR, "src", "config", "seoConfig.js")
+    : path.join(ROOT_DIR, "src", "config", "seoConfig.ts");
+  assert.ok(fs.existsSync(seoConfigFile), "seoConfig file must exist");
 
   const content = fs.readFileSync(seoConfigFile, "utf-8");
 
@@ -156,8 +158,10 @@ test("robots.txt does not disallow private HTML pages so crawlers discover noind
 });
 
 test("Statutory resource articles have required attribution fields", async () => {
-  const articlesPath = path.join(ROOT_DIR, "src", "pages", "resources", "articlesData.ts");
-  assert.ok(fs.existsSync(articlesPath), "articlesData.ts must exist");
+  const articlesPath = fs.existsSync(path.join(ROOT_DIR, "src", "pages", "resources", "articlesData.js"))
+    ? path.join(ROOT_DIR, "src", "pages", "resources", "articlesData.js")
+    : path.join(ROOT_DIR, "src", "pages", "resources", "articlesData.ts");
+  assert.ok(fs.existsSync(articlesPath), "articlesData file must exist");
 
   const content = fs.readFileSync(articlesPath, "utf-8");
 

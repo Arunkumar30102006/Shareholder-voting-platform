@@ -1,0 +1,193 @@
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import purgecss from "vite-plugin-purgecss";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default defineConfig(({ isSsrBuild }) => ({
+  server: {
+    host: "0.0.0.0",
+    port: 5173,
+    strictPort: false,
+    proxy: {
+      "/api/auth/initiate": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/auth\/initiate/, "/functions/v1/initiate-shareholder-auth"),
+        headers: {
+          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
+        },
+      },
+      "/api/auth/verify": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/auth\/verify/, "/functions/v1/verify-shareholder-otp"),
+        headers: {
+          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
+        },
+      },
+      "/api/auth/session": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/auth\/session/, "/functions/v1/shareholder-session"),
+        headers: {
+          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
+        },
+      },
+      "/api/cast-vote": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/cast-vote/, "/functions/v1/cast-vote"),
+        headers: {
+          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
+        },
+      },
+      "/api/eligible-events": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/eligible-events/, "/functions/v1/eligible-events"),
+        headers: {
+          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
+        },
+      },
+      "/api/send-meeting-invites": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/send-meeting-invites/, "/functions/v1/send-meeting-invites"),
+        headers: {
+          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
+        },
+      },
+      "/api/functions": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/functions/, "/functions/v1"),
+        headers: {
+          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
+        },
+      },
+      "/supabase-proxy": {
+        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/supabase-proxy/, ""),
+      },
+    },
+  },
+  plugins: [
+    react(),
+    purgecss({
+      content: ['./index.html', './src/**/*.{js,jsx,html}'],
+      defaultExtractor: (content) => content.match(/[^<>"'`\s]*[^<>"'`\s:]/g) || [],
+      safelist: {
+        standard: ['html', 'body'],
+        greedy: [/^animate/, /^aos/, /^swiper/, /^framer/, /^xl:/, /^lg:/, /^md:/, /^sm:/, /^hover:/, /^focus:/, /^data-/, /^aria-/, /^lucide/, /^radix/]
+      }
+    }),
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    sourcemap: "hidden",
+    minify: "esbuild",
+    modulePreload: {
+      polyfill: false,
+      resolveDependencies(filename, deps) {
+        // Exclude heavy lazy chunks from initial page HTML preloads
+        return deps.filter(dep =>
+          !dep.includes('three') &&
+          !dep.includes('pdf') &&
+          !dep.includes('supabase') &&
+          !dep.includes('charts') &&
+          !dep.includes('animation') &&
+          !dep.includes('markdown') &&
+          !dep.includes('ogl')
+        );
+      },
+    },
+    rollupOptions: {
+      output: isSsrBuild
+        ? {}
+        : {
+            manualChunks(id) {
+              if (id.includes('vite/preload-helper')) {
+                return 'vendor-react';
+              }
+              if (id.includes('node_modules')) {
+                // Core React, Helmet, and shared styling primitives (must be isolated so lazy leaf chunks don't capture them)
+                if (/[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|clsx|tailwind-merge)[\\/]/.test(id)) {
+                  return 'vendor-react';
+                }
+                // Three.js & 3D WebGL (standalone leaf)
+                if (/[\\/]node_modules[\\/](three|@react-three|ogl)[\\/]/.test(id)) {
+                  return 'three-bundle';
+                }
+                // PDF & Document Generation (standalone leaf)
+                if (/[\\/]node_modules[\\/](jspdf|jspdf-autotable|pdfjs-dist|mammoth|tesseract\.js)[\\/]/.test(id)) {
+                  return 'pdf-bundle';
+                }
+                // Supabase SDK (standalone leaf)
+                if (/[\\/]node_modules[\\/]@supabase[\\/]/.test(id)) {
+                  return 'supabase-bundle';
+                }
+                // Charts library (only used on dashboard pages)
+                if (/[\\/]node_modules[\\/](recharts|react-smooth|d3-scale|d3-shape|d3-path|d3-interpolate|d3-color|d3-time|d3-format|d3-array)[\\/]/.test(id)) {
+                  return 'charts-bundle';
+                }
+                // Animation libraries (deferred, non-critical)
+                if (/[\\/]node_modules[\\/](motion|framer-motion|gsap)[\\/]/.test(id)) {
+                  return 'animation-bundle';
+                }
+                // Icon library (large tree, split for better caching)
+                if (/[\\/]node_modules[\\/]lucide-react[\\/]/.test(id)) {
+                  return 'icons-bundle';
+                }
+                // Markdown renderer (only used on blog/content pages)
+                if (/[\\/]node_modules[\\/]react-markdown[\\/]/.test(id)) {
+                  return 'markdown-bundle';
+                }
+                // i18n runtime (loaded eagerly but cacheable separately)
+                if (/[\\/]node_modules[\\/](i18next|react-i18next|i18next-browser-languagedetector)[\\/]/.test(id)) {
+                  return 'i18n-bundle';
+                }
+              }
+            },
+          },
+    },
+  },
+  // vite-react-ssg: static site generation options
+  ssgOptions: {
+    script: 'async',
+    formatting: 'minify',
+    entry: 'src/main.jsx',
+    includedRoutes: async (paths) => {
+      const blogSlugs = [
+        'sebi-compliant-evoting-guide',
+        'role-of-scrutinizer-form-mgt-13',
+        'agm-remote-evoting-timeline-checklist',
+        'how-online-shareholder-voting-works',
+        'agm-evoting-vs-physical-meeting',
+        'benefits-electronic-voting-shareholders'
+      ];
+      const blogRoutes = blogSlugs.map(slug => `/blog/${slug}`);
+
+      const resourceSlugs = [
+        'what-is-shareholder-e-voting',
+        'how-agm-e-voting-works',
+        'how-egm-e-voting-works',
+        'how-proxy-voting-works',
+        'record-date-and-voting-entitlement',
+        'ordinary-vs-special-resolution',
+        'scrutinizer-voting-workflow'
+      ];
+      const resourceRoutes = resourceSlugs.map(slug => `/resources/${slug}`);
+
+      return Array.from(new Set([...paths, ...blogRoutes, ...resourceRoutes]));
+    },
+  },
+}));

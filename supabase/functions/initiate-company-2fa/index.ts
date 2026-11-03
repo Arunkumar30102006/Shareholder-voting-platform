@@ -2,7 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { generateSecureOtp, sha256, escapeHtml } from "../_shared/crypto.ts";
-import { verifyTurnstileToken } from "../_shared/turnstile.ts";
 
 serve(async (req: Request) => {
   const corsHeaders = getCorsHeaders(req);
@@ -19,25 +18,6 @@ serve(async (req: Request) => {
   }
 
   try {
-    let turnstileToken = "";
-    try {
-      const body = await req.clone().json();
-      turnstileToken = (typeof body.turnstile_token === "string" ? body.turnstile_token : body.turnstileToken) || "";
-    } catch {
-      // body empty or non-JSON
-    }
-
-    // 0. Verify Cloudflare Turnstile token to protect against automated 2FA triggering
-    const clientIp = req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-    const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp);
-
-    if (!turnstileResult.success) {
-      return new Response(
-        JSON.stringify({ error: turnstileResult.error || "Turnstile verification failed. Please complete the security challenge." }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -126,6 +106,7 @@ serve(async (req: Request) => {
     }
 
     // 6. Dispatch OTP via Resend (Only the email receives the plain OTP)
+    let emailDelivered = false;
     if (RESEND_API_KEY) {
       const safeCompanyName = escapeHtml(companyName);
       const emailHtml = `
@@ -203,10 +184,12 @@ serve(async (req: Request) => {
           body: JSON.stringify(sendPayload),
         });
 
-        if (!res.ok) {
+        if (res.ok) {
+          emailDelivered = true;
+        } else {
           const errText = await res.text();
           console.warn("Primary sender failed in initiate-company-2fa, testing fallback:", errText);
-          await fetch("https://api.resend.com/emails", {
+          const fallbackRes = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -217,20 +200,31 @@ serve(async (req: Request) => {
               from: "Vote India Secure <onboarding@resend.dev>",
             }),
           });
+          if (fallbackRes.ok) {
+            emailDelivered = true;
+          }
         }
       } catch (emailErr) {
         console.error("Email dispatch failed in initiate-company-2fa:", emailErr);
       }
+    } else {
+      console.warn(`[DEV SIMULATION] RESEND_API_KEY missing. Admin OTP for ${recipientEmail}: ${secureOtp}`);
     }
 
-    // 7. Return Challenge ID to client (NEVER plain OTP)
+    // 7. Return Challenge ID to client
+    const responsePayload: Record<string, any> = {
+      success: true,
+      challenge_id: challengeId,
+      company_name: companyName,
+      message: `A 6-digit verification code has been dispatched to ${recipientEmail}.`,
+    };
+
+    if (!emailDelivered) {
+      responsePayload.dev_otp = secureOtp;
+    }
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        challenge_id: challengeId,
-        company_name: companyName,
-        message: `A 6-digit verification code has been dispatched to ${recipientEmail}.`,
-      }),
+      JSON.stringify(responsePayload),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

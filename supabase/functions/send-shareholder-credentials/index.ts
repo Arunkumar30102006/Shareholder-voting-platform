@@ -96,8 +96,14 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!RESEND_API_KEY) {
-      console.error("RESEND_API_KEY secret is missing in Supabase Edge Functions environment.");
-      throw new Error("Email service is temporarily unconfigured. Please configure RESEND_API_KEY.");
+      console.warn(`[DEV SIMULATION] RESEND_API_KEY secret is missing. Simulating credentials email to ${targetEmail}`);
+      return new Response(JSON.stringify({ success: true, message: "Credentials email simulated (RESEND_API_KEY not configured)", simulated: true }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
     }
 
     console.log(`Processing ${type} email for ${targetEmail}`);

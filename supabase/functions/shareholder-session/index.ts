@@ -35,7 +35,16 @@ serve(async (req: Request) => {
     }
 
     const cookieHeader = req.headers.get("cookie");
-    const sessionToken = parseCookie(cookieHeader, "voting_session");
+    const customSessionToken = req.headers.get("x-session-token");
+    let bearerToken = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") || "";
+    if (bearerToken.startsWith("eyJ")) {
+      bearerToken = "";
+    }
+
+    const sessionToken =
+      parseCookie(cookieHeader, "voting_session") ||
+      customSessionToken ||
+      bearerToken;
 
     if (!sessionToken) {
       return new Response(
@@ -77,12 +86,12 @@ serve(async (req: Request) => {
         expires_at,
         shareholders (
           id,
-          name,
+          shareholder_name,
+          email,
+          phone,
           company_id,
-          session_id,
           shares_held,
-          folio_number,
-          demat_account_number
+          login_id
         )
       `)
       .eq("session_token_hash", sessionTokenHash)
@@ -91,9 +100,9 @@ serve(async (req: Request) => {
       .maybeSingle();
 
     if (error || !session) {
+      console.warn("shareholder-session not found or error:", error);
       const responseHeaders = new Headers(corsHeaders);
       responseHeaders.set("Content-Type", "application/json");
-      // Clear invalid cookie
       responseHeaders.append(
         "Set-Cookie",
         "voting_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
@@ -104,11 +113,24 @@ serve(async (req: Request) => {
       );
     }
 
+    let companyData: any = null;
+    if (session?.shareholders?.company_id) {
+      const { data: comp } = await supabaseAdmin
+        .from("companies")
+        .select("id, company_name")
+        .eq("id", session.shareholders.company_id)
+        .maybeSingle();
+      companyData = comp;
+    }
+
     return new Response(
       JSON.stringify({
         authenticated: true,
         csrf_token: session.csrf_token,
-        shareholder: session.shareholders,
+        shareholder: {
+          ...session.shareholders,
+          companies: companyData,
+        },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

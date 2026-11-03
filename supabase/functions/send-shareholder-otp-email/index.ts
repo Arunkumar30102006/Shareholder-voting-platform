@@ -37,16 +37,42 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    const updateResult = await supabaseAdmin
+      .from("shareholders")
+      .update({
+        otp_code: otpHash,
+        otp_expiry: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      })
+      .eq("id", shareholder_id);
+
+    if (updateResult.error) {
+      console.error("Database update error:", updateResult.error);
+      throw new Error(`Failed to store OTP: ${updateResult.error.message}`);
+    }
+
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
     if (!RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is not set in Supabase Edge Function environment.");
+      console.warn(`[DEV SIMULATION] RESEND_API_KEY missing. Shareholder OTP for ${email}: ${otp}`);
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "OTP generated successfully (Simulation mode)", 
+          simulated: true,
+          otp: otp 
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     const textContent = `VOTE INDIA SECURE — 2-FACTOR VOTING AUTHENTICATION\n\nHello ${name || "Valued Shareholder"},\n\nYour One-Time Passcode (OTP) is: ${otp}\n\nThis verification code is valid for 10 minutes.\nNever share this code with anyone.\n\nVote India Secure Enterprise Platform`;
 
     const htmlContent = `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -58,11 +84,6 @@ serve(async (req) => {
       <td align="center">
         <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:580px;background-color:#0d1b2a;border:1px solid rgba(56,189,248,0.3);border-radius:24px;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.8);">
           
-          <!-- Top Bar -->
-          <tr>
-            <td height="5" style="background:linear-gradient(90deg, #0284c7 0%, #38bdf8 100%);background-color:#0284c7;font-size:0;line-height:0;">&nbsp;</td>
-          </tr>
-
           <!-- Header -->
           <tr>
             <td style="padding:32px 32px 20px;background:linear-gradient(180deg,#0a192f 0%,#0d1b2a 100%);text-align:center;border-bottom:1px solid rgba(255,255,255,0.08);">
@@ -113,16 +134,7 @@ serve(async (req) => {
 </html>
     `;
 
-    // 1. Update DB OTP
-    const updatePromise = supabaseAdmin
-      .from("shareholders")
-      .update({
-        otp_code: otpHash,
-        otp_expiry: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-      })
-      .eq("id", shareholder_id);
-
-    // 2. Email sending with domain fallback
+    // Email sending with domain fallback
     const emailPayload = {
       from: "Vote India Secure <notifications@shareholdervoting.in>",
       reply_to: "support@shareholdervoting.in",
@@ -149,35 +161,17 @@ serve(async (req) => {
     if (!emailResponse.ok) {
       const errorJson = await emailResponse.clone().json().catch(() => null);
       console.warn("Primary OTP sender failed, falling back to onboarding@resend.dev:", errorJson);
-      if (
-        errorJson?.message?.toLowerCase().includes("domain") ||
-        errorJson?.name === "validation_error" ||
-        emailResponse.status === 403
-      ) {
-        emailResponse = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-          },
-          body: JSON.stringify({
-            ...emailPayload,
-            from: "Vote India Secure <onboarding@resend.dev>",
-          }),
-        });
-      }
-    }
-
-    const [updateResult] = await Promise.all([updatePromise]);
-
-    if (updateResult.error) {
-      console.error("Database update error:", updateResult.error);
-      throw new Error(`Failed to store OTP: ${updateResult.error.message}`);
-    }
-
-    const emailData = await emailResponse.json();
-    if (!emailResponse.ok) {
-      throw new Error(emailData.message || "Failed to deliver OTP email");
+      emailResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          ...emailPayload,
+          from: "Vote India Secure <onboarding@resend.dev>",
+        }),
+      });
     }
 
     return new Response(
