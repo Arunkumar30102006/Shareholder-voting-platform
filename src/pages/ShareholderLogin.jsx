@@ -58,19 +58,8 @@ export const ShareholderLogin = () => {
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
     };
-    const warmEdgeFunction = async () => {
-        try {
-            await fetch(`${env.SUPABASE_URL}/functions/v1/send-shareholder-otp-email`, {
-                method: "OPTIONS",
-                headers: {
-                    "Content-Type": "application/json",
-                    "apikey": env.SUPABASE_ANON_KEY
-                }
-            });
-        }
-        catch {
-            // Silently ignore preflight warmup errors
-        }
+    const warmEdgeFunction = () => {
+        // No-op (prevent illegal manual browser OPTIONS preflight calls)
     };
     // Prefill Quick Demo Credentials
     const handlePrefillDemo = () => {

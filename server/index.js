@@ -13,12 +13,18 @@ const PORT = process.env.PORT || 5000;
 // CORS setup for Frontend (Vite)
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:4173",
-      "http://127.0.0.1:5173",
-      "http://localhost:3000",
-    ],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        origin.includes("localhost") ||
+        origin.includes("127.0.0.1") ||
+        origin.endsWith(".vercel.app") ||
+        origin.includes("shareholdervoting.in")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );

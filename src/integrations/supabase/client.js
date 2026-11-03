@@ -11,8 +11,8 @@ const ssrSafeStorage = isBrowser
         setItem: () => { },
         removeItem: () => { },
     };
-// Use a proxy in production to bypass mobile network blocking/CORS issues
-const SUPABASE_URL = (import.meta.env.PROD && isBrowser)
+// Use proxy in browser to completely eliminate CORS and mobile network blocking
+const SUPABASE_URL = isBrowser
     ? `${window.location.origin}/supabase-proxy`
     : SUPABASE_BASE_URL;
 if (!SUPABASE_ANON_KEY) {
