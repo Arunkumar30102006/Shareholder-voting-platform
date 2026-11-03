@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CalendarDays, Users, UserPlus, Video, Link as LinkIcon, Send, Play, Pause, CheckCircle2, AlertCircle, FileText, Mail, Loader2, Plus, Trash2, Vote, Shield, Info, ExternalLink, Trophy, Download, Sparkles, Layers, FileCheck2, Lock, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { expressVotingApi, expressCompanyApi } from "@/services/api/expressApi";
 import { env } from "@/config/env";
 import { z } from "zod";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -117,13 +118,11 @@ const VotingManagement = () => {
             navigate("/company-login");
             return;
         }
-        const { data: companyData, error: companyError } = await supabase
-            .from("companies")
-            .select("*")
-            .eq("id", adminData.company_id)
-            .maybeSingle();
-        if (companyError || !companyData) {
-            toast.error("Could not load company data");
+        let companyData = null;
+        try {
+            companyData = await expressCompanyApi.getProfile(adminData.company_id);
+        } catch (companyError) {
+            toast.error("Could not load company data via Express backend");
             setIsLoading(false);
             return;
         }
@@ -535,49 +534,23 @@ const VotingManagement = () => {
                 sessionPayload.is_active = false;
             }
 
-            if (votingSession) {
-                let { error } = await supabase.from("voting_sessions")
-                    .update(sessionPayload)
-                    .eq("id", votingSession.id);
-                if (error) {
-                    console.warn("Primary session update note, trying schedule fallback:", error);
-                    const { status, is_active, ...scheduleOnly } = sessionPayload;
-                    const retry = await supabase.from("voting_sessions")
-                        .update(scheduleOnly)
-                        .eq("id", votingSession.id);
-                    if (retry.error) {
-                        throw error;
-                    } else {
-                        toast.success("Event schedule configuration saved successfully.");
-                    }
-                } else {
-                    toast.success("Voting event updated successfully.");
-                }
+            // Call Express Backend API (/api/voting/sessions)
+            const savedSession = await expressVotingApi.saveSession({
+                sessionPayload,
+                sessionId: votingSession ? votingSession.id : undefined,
+            });
+            toast.success("Voting event saved successfully via Express Backend.");
 
-                // If voting time is started / live, dispatch invites to shareholders if not already sent
-                if (isLive && !votingSession.is_meeting_emails_sent) {
-                    toast.info("Voting is currently OPEN. Dispatching invitations to shareholders...");
-                    try {
-                        await handleSendMeetingInvites();
-                    } catch (inviteErr) {
-                        console.warn("Auto-dispatch invite warning:", inviteErr);
-                    }
-                }
-
-                await loadVotingSessions(company.id, votingSession.id);
-            }
-            else {
-                const { data, error } = await supabase.from("voting_sessions")
-                    .insert(sessionPayload)
-                    .select()
-                    .single();
-                if (error)
-                    throw error;
-                toast.success("Voting event created successfully.");
-                if (data) {
-                    await loadVotingSessions(company.id, data.id);
+            if (isLive && votingSession && !votingSession.is_meeting_emails_sent) {
+                toast.info("Voting is currently OPEN. Dispatching invitations to shareholders...");
+                try {
+                    await handleSendMeetingInvites();
+                } catch (inviteErr) {
+                    console.warn("Auto-dispatch invite warning:", inviteErr);
                 }
             }
+
+            await loadVotingSessions(company.id, savedSession?.id || votingSession?.id);
         }
         catch (err) {
             if (err instanceof z.ZodError) {
@@ -789,15 +762,16 @@ const VotingManagement = () => {
         setIsAddingResolution(true);
         try {
             resolutionSchema.parse(resolutionForm);
-            const { error } = await supabase.from("resolutions").insert({
-                voting_session_id: votingSession.id,
-                title: resolutionForm.title.trim(),
-                description: resolutionForm.description.trim(),
-                resolution_type: resolutionForm.resolutionType,
+            // Call Express Backend API (/api/voting/resolutions)
+            await expressVotingApi.addResolution({
+                payload: {
+                    voting_session_id: votingSession.id,
+                    title: resolutionForm.title.trim(),
+                    description: resolutionForm.description.trim(),
+                    resolution_type: resolutionForm.resolutionType,
+                }
             });
-            if (error)
-                throw error;
-            toast.success("Resolution agenda added to session ballot.");
+            toast.success("Resolution agenda added to session ballot via Express.");
             setResolutionForm({ title: "", description: "", resolutionType: "ordinary" });
             setShowAddResolution(false);
             await loadResolutions(votingSession.id);
@@ -818,15 +792,16 @@ const VotingManagement = () => {
     const handleDeleteResolution = async (id) => {
         if (!confirm("Are you sure you want to remove this resolution agenda?"))
             return;
-        const { error } = await supabase.from("resolutions").delete().eq("id", id);
-        if (error) {
-            toast.error("Failed to delete resolution.");
-            return;
-        }
-        toast.success("Resolution removed.");
-        if (votingSession) {
-            await loadResolutions(votingSession.id);
-            await loadResults(votingSession.id);
+        try {
+            // Call Express Backend API (/api/voting/resolutions/:id)
+            await expressVotingApi.deleteResolution(id);
+            toast.success("Resolution removed via Express.");
+            if (votingSession) {
+                await loadResolutions(votingSession.id);
+                await loadResults(votingSession.id);
+            }
+        } catch (error) {
+            toast.error("Failed to delete resolution: " + (error.message || ""));
         }
     };
     const handleAddNominee = async (e) => {

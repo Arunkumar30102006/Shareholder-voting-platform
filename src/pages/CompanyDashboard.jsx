@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "
 import { Building2, Users, Mail, Phone, Plus, Send, Shield, LogOut, Loader2, CheckCircle2, Hash, Trash2, RefreshCw, Search, Download, Filter, TrendingUp, FileSpreadsheet, Sparkles, FileText, Pencil, X, CreditCard, Upload, Copy, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { expressCompanyApi } from "@/services/api/expressApi";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
 import { votingApi } from "@/services/api/voting";
@@ -104,13 +105,11 @@ const CompanyDashboard = () => {
             navigate("/company-login");
             return;
         }
-        const { data: companyData, error: companyError } = await supabase
-            .from("companies")
-            .select("*")
-            .eq("id", adminData.company_id)
-            .single();
-        if (companyError || !companyData) {
-            console.error("Company fetch failed:", companyError);
+        let companyData = null;
+        try {
+            companyData = await expressCompanyApi.getProfile(adminData.company_id);
+        } catch (companyError) {
+            console.error("Company fetch failed via Express:", companyError);
             toast.error("Failed to load company profile");
             setIsLoading(false);
             return;
@@ -123,17 +122,12 @@ const CompanyDashboard = () => {
         setIsLoading(false);
     };
     const loadShareholders = async (companyId) => {
-        const { data, error } = await supabase
-            .from("shareholders")
-            .select("*")
-            .eq("company_id", companyId)
-            .order("created_at", { ascending: false });
-        if (error) {
+        try {
+            const data = await expressCompanyApi.getShareholders(companyId);
+            setShareholders(data || []);
+        } catch (error) {
             console.error("Failed loading shareholders:", error);
             toast.error("Failed to fetch shareholder roster");
-        }
-        else {
-            setShareholders(data || []);
         }
     };
     const loadActiveSession = async (companyId) => {
@@ -256,36 +250,21 @@ const CompanyDashboard = () => {
                 setIsAddingShareholder(false);
                 return;
             }
-            const { loginId, password } = generateSecureCredentials();
-            const passwordHash = await hashPassword(password);
-            // Core fields guaranteed in Supabase PostgreSQL schema
-            const insertPayload = {
-                company_id: company.id,
-                shareholder_name: validatedData.name,
+            // Call Express Backend API (/api/companies/:id/shareholders)
+            const addResult = await expressCompanyApi.addShareholder(company.id, {
+                name: validatedData.name,
                 email: validatedData.email,
                 phone: validatedData.phone || null,
-                shares_held: validatedData.sharesHeld,
-                login_id: loginId,
-                password_hash: passwordHash,
-            };
-            const insertResult = await supabase
-                .from("shareholders")
-                .insert(insertPayload)
-                .select()
-                .single();
-            if (insertResult.error) {
-                console.error("Supabase insert error:", insertResult.error);
-                if (insertResult.error.code === "23505") {
-                    toast.error("A shareholder with this login ID or email already exists.");
-                }
-                else {
-                    toast.error(`Failed to register shareholder: ${insertResult.error.message}`);
-                }
-                setIsAddingShareholder(false);
-                return;
-            }
+                sharesHeld: validatedData.sharesHeld,
+                category: validatedData.category,
+                holdingType: validatedData.holdingType,
+                panNumber: validatedData.panNumber,
+                dpidClientId: validatedData.dpidClientId,
+            });
+
+            const { loginId, password } = addResult.generatedCredentials || {};
             setLastCreatedCreds({
-                loginId,
+                loginId: loginId || "SH-PENDING",
                 name: validatedData.name,
                 email: validatedData.email,
             });
@@ -411,24 +390,9 @@ const CompanyDashboard = () => {
             return;
         setIsUploadingCsv(true);
         try {
-            const recordsToInsert = [];
-            for (const row of parsedCsvRows) {
-                const { loginId, password } = generateSecureCredentials();
-                const passwordHash = await hashPassword(password);
-                recordsToInsert.push({
-                    company_id: company.id,
-                    shareholder_name: row.name,
-                    email: row.email,
-                    phone: row.phone || null,
-                    shares_held: row.sharesHeld,
-                    login_id: loginId,
-                    password_hash: passwordHash,
-                });
-            }
-            const { error } = await supabase.from("shareholders").insert(recordsToInsert);
-            if (error)
-                throw error;
-            toast.success(`Successfully imported ${recordsToInsert.length} shareholders from Benpos CSV!`);
+            // Call Express Backend API (/api/companies/:id/shareholders/bulk)
+            const result = await expressCompanyApi.bulkAddShareholders(company.id, parsedCsvRows);
+            toast.success(`Successfully imported ${result.count || parsedCsvRows.length} shareholders from Benpos CSV via Express!`);
             setParsedCsvRows([]);
             setCsvFile(null);
             setShowAddForm(false);
@@ -547,59 +511,9 @@ const CompanyDashboard = () => {
             return;
         }
         try {
-            // 1. Try atomic database cascade function
-            const { error: rpcErr } = await supabase.rpc("delete_shareholder_cascaded", {
-                p_shareholder_id: shareholderId,
-                p_company_id: company.id,
-            });
-
-            if (rpcErr) {
-                // 2. Client-side sequential purge of referencing records
-                try {
-                    await supabase.from("votes").delete().eq("shareholder_id", shareholderId);
-                } catch {}
-                try {
-                    await supabase.from("votes").delete().eq("casting_shareholder_id", shareholderId);
-                } catch {}
-                try {
-                    await supabase.from("proxy_delegations").delete().eq("delegator_id", shareholderId);
-                } catch {}
-                try {
-                    await supabase.from("proxy_delegations").delete().eq("proxy_id", shareholderId);
-                } catch {}
-                try {
-                    await supabase.from("voter_master").delete().eq("shareholder_id", shareholderId);
-                } catch {}
-                try {
-                    await supabase.from("shareholder_auth_sessions").delete().eq("shareholder_id", shareholderId);
-                } catch {}
-
-                const { error } = await supabase
-                    .from("shareholders")
-                    .delete()
-                    .eq("id", shareholderId)
-                    .eq("company_id", company.id);
-
-                if (error) {
-                    if (error.code === "23503") {
-                        // De-list and revoke credentials so dashboard is kept clean
-                        const { error: softErr } = await supabase
-                            .from("shareholders")
-                            .update({ status: "revoked", shares_held: 0 })
-                            .eq("id", shareholderId)
-                            .eq("company_id", company.id);
-
-                        if (!softErr) {
-                            toast.warning("Shareholder access revoked & de-listed from active ledger. Execute the cascade SQL migration in your Supabase SQL Editor to permanently purge historical ballot rows.");
-                            await loadShareholders(company.id);
-                            return;
-                        }
-                    }
-                    throw error;
-                }
-            }
-
-            toast.success("Shareholder removed from register.");
+            // Call Express Backend API (/api/companies/:id/shareholders/:shareholderId)
+            await expressCompanyApi.deleteShareholder(company.id, shareholderId);
+            toast.success("Shareholder removed from register via Express.");
             await loadShareholders(company.id);
         }
         catch (err) {

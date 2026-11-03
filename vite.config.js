@@ -13,61 +13,9 @@ export default defineConfig(({ isSsrBuild }) => ({
     port: 5173,
     strictPort: false,
     proxy: {
-      "/api/auth/initiate": {
-        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
+      "/api": {
+        target: "http://localhost:5000",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/auth\/initiate/, "/functions/v1/initiate-shareholder-auth"),
-        headers: {
-          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
-        },
-      },
-      "/api/auth/verify": {
-        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/auth\/verify/, "/functions/v1/verify-shareholder-otp"),
-        headers: {
-          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
-        },
-      },
-      "/api/auth/session": {
-        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/auth\/session/, "/functions/v1/shareholder-session"),
-        headers: {
-          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
-        },
-      },
-      "/api/cast-vote": {
-        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/cast-vote/, "/functions/v1/cast-vote"),
-        headers: {
-          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
-        },
-      },
-      "/api/eligible-events": {
-        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/eligible-events/, "/functions/v1/eligible-events"),
-        headers: {
-          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
-        },
-      },
-      "/api/send-meeting-invites": {
-        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/send-meeting-invites/, "/functions/v1/send-meeting-invites"),
-        headers: {
-          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
-        },
-      },
-      "/api/functions": {
-        target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
-        changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/functions/, "/functions/v1"),
-        headers: {
-          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwZnZ2dXV1bWZ1dmJxa2Fja3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDA5NDMsImV4cCI6MjA4MTg3Njk0M30.m9qn4DKKKtzmb3MVOxUKjpb8G6ZBOyl8Nn0ldWiqAcs",
-        },
       },
       "/supabase-proxy": {
         target: "https://tpfvvuuumfuvbqkackwk.supabase.co",
