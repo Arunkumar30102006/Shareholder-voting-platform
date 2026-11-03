@@ -5,7 +5,6 @@ import { CheckCircle2, XCircle, ChevronRight, Upload, X, Building2, FileText, Sh
 import { SEO } from "@/components/layout/SEO";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { expressCompanyApi } from "@/services/api/expressApi";
 import { toast } from "sonner";
 const STEPS = [
     { id: 1, title: "Company Details", icon: Building2 },
@@ -298,9 +297,141 @@ export default function CompanyRegister() {
             return;
         setIsSubmitting(true);
         try {
-            // Call Express Backend API (/api/companies/register)
-            const regResult = await expressCompanyApi.register(formData);
-            const companyData = regResult.company;
+            // 0. Pre-flight check: Ensure CIN doesn't already exist to prevent partial failures
+            const { data: existingCompany } = await supabase
+                .from("companies")
+                .select("id")
+                .eq("cin_number", formData.cin)
+                .maybeSingle();
+            if (existingCompany) {
+                throw new Error("A company with this CIN number is already registered. Please use a different CIN.");
+            }
+            // 1. Sign up admin user using the custom password
+            let userId = null;
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: formData.adminEmail,
+                password: formData.adminPassword,
+                options: {
+                    data: {
+                        full_name: formData.adminName,
+                    }
+                }
+            });
+            if (authError) {
+                if (authError.message.includes("already registered") || authError.status === 422) {
+                    // Email exists in Supabase Auth — try signing in with the provided password
+                    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                        email: formData.adminEmail,
+                        password: formData.adminPassword,
+                    });
+                    if (signInError) {
+                        throw new Error("This email is already registered. Please enter the correct password for this account, or use a different email.");
+                    }
+                    userId = signInData.user?.id;
+                    if (!userId) {
+                        throw new Error("Could not verify existing account. Please try a different email.");
+                    }
+                    // Check if this user already has a company linked
+                    const { data: existingAdmin } = await supabase
+                        .from("company_admins")
+                        .select("id, company_id")
+                        .eq("user_id", userId)
+                        .maybeSingle();
+                    if (existingAdmin) {
+                        // Check if that company still exists
+                        const { data: linkedCompany } = await supabase
+                            .from("companies")
+                            .select("id, company_name")
+                            .eq("id", existingAdmin.company_id)
+                            .maybeSingle();
+                        if (linkedCompany) {
+                            throw new Error(`This email is already linked to "${linkedCompany.company_name}". Please use a different email or log in to your existing company.`);
+                        }
+                        // Company was deleted but admin record remains — clean it up
+                        await supabase
+                            .from("company_admins")
+                            .delete()
+                            .eq("id", existingAdmin.id);
+                    }
+                } else {
+                    throw new Error(authError.message);
+                }
+            } else {
+                userId = authData.user?.id;
+            }
+            if (!userId)
+                throw new Error("Could not create user account. The email might be blocked.");
+            // 2. Insert Company
+            const { data: companyData, error: companyError } = await supabase
+                .from("companies")
+                .insert({
+                company_name: formData.companyName,
+                cin_number: formData.cin,
+                pan_number: formData.pan,
+                gstin: formData.gstin || null,
+                company_type: formData.companyType,
+                date_of_incorporation: formData.doi,
+                exchanges: formData.exchanges,
+                isin_number: formData.isin || null,
+                authorized_capital: parseFloat(formData.authorizedCapital.replace(/,/g, '')),
+                paid_up_capital: parseFloat(formData.paidUpCapital.replace(/,/g, '')),
+                registered_address: formData.address,
+                country: formData.country,
+                state: formData.state,
+                district: formData.district || null,
+                pin_code: formData.pinCode,
+                contact_email: formData.adminEmail,
+                contact_phone: formData.adminPhone,
+                cs_name: formData.csName,
+                cs_membership_number: formData.csMemNumber,
+                cs_email: formData.csEmail,
+                cs_phone: formData.csPhone,
+                sebi_email: formData.sebiEmail,
+                sebi_reg_number: formData.sebiRegNumber || null,
+                rta_name: formData.rtaName,
+                rta_reg_number: formData.rtaRegNumber || null,
+            })
+                .select()
+                .single();
+            if (companyError) {
+                if (companyError.message.includes("authorized_capital") || companyError.message.includes("schema cache")) {
+                    throw new Error("Database schema out of sync. Please run 'supabase_setup.sql' in your Supabase SQL editor and click 'Reload API' in the dashboard.");
+                }
+                if (companyError.message.includes("companies_cin_number_key")) {
+                    throw new Error("A company with this CIN number is already registered. Please verify your CIN or contact support.");
+                }
+                throw new Error(companyError.message);
+            }
+            // 3. Insert Admin record
+            let { error: adminError } = await supabase
+                .from("company_admins")
+                .insert({
+                user_id: userId,
+                company_id: companyData.id,
+                name: formData.adminName,
+                designation: formData.adminDesignation,
+                email: formData.adminEmail,
+                phone: formData.adminPhone,
+                role: "admin"
+            });
+            // Fallback for legacy database schemas where the column was named "full_name" instead of "name"
+            if (adminError && adminError.message.includes("full_name")) {
+                const { error: retryError } = await supabase
+                    .from("company_admins")
+                    .insert({
+                    user_id: userId,
+                    company_id: companyData.id,
+                    name: formData.adminName,
+                    full_name: formData.adminName, // Provide both to satisfy legacy NOT NULL constraints
+                    designation: formData.adminDesignation,
+                    email: formData.adminEmail,
+                    phone: formData.adminPhone,
+                    role: "admin"
+                });
+                adminError = retryError;
+            }
+            if (adminError)
+                throw new Error(adminError.message);
             const newRegId = `VIS-CO-${Math.floor(Math.random() * 900000) + 100000}`;
             setRegId(newRegId);
             // Send the real Welcome Email using Supabase Edge Functions (Resend)

@@ -5,9 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "server": "node server/index.js",
-    "dev:all": "concurrently \"vite\" \"node server/index.js\"",
-    "start": "node server/index.js",
     "build": "vite-react-ssg build && node scripts/generate-sitemap.cjs",
     "lint": "eslint .",
     "test": "node --test tests/**/*.test.mjs",

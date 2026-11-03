@@ -265,16 +265,10 @@ export const votingApi = {
             });
             if (res.ok) {
                 const data = await res.json();
-                if (currentShareholder?.id) {
-                    supabase.from("shareholders").update({ is_credential_used: true }).eq("id", currentShareholder.id).then(() => {});
-                }
                 return data.receipt || data;
             }
             if (res.status === 409) {
                 // Vote has already been cast for this resolution!
-                if (currentShareholder?.id) {
-                    supabase.from("shareholders").update({ is_credential_used: true }).eq("id", currentShareholder.id).then(() => {});
-                }
                 const data = await res.json().catch(() => ({}));
                 return data.receipt || { alreadyVoted: true, resolution_id: canonicalResolutionId, vote_value: upperVote };
             }
@@ -295,9 +289,6 @@ export const votingApi = {
                 }
             });
             if (!error && data?.receipt) {
-                if (currentShareholder?.id) {
-                    supabase.from("shareholders").update({ is_credential_used: true }).eq("id", currentShareholder.id).then(() => {});
-                }
                 return data.receipt;
             }
         } catch {}

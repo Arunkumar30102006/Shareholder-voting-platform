@@ -59,7 +59,7 @@ export const ShareholderLogin = () => {
         return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
     };
     const warmEdgeFunction = () => {
-        // No-op (prevent illegal manual browser OPTIONS preflight calls)
+        // No-op to avoid unpermitted manual OPTIONS preflight CORS errors
     };
     // Prefill Quick Demo Credentials
     const handlePrefillDemo = () => {

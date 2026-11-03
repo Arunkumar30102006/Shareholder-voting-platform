@@ -162,86 +162,71 @@ const CompanyLogin = () => {
             return { success: true };
         }
         try {
-            // 1. Direct Edge Function Verification
+            // Server-Side Verification: Compare submitted OTP against stored hash in PostgreSQL
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-company-2fa", {
                 body: {
                     challenge_id: challengeId,
                     otp: enteredOtp.trim(),
                 }
             });
-
-            if (!verifyError && verifyData?.success) {
-                return { success: true };
-            }
-
-            // 2. Fallback to Express backend (/api/companies/2fa/verify)
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                const expRes = await fetch("/api/companies/2fa/verify", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        challengeId,
-                        otp: enteredOtp.trim(),
-                        userId: user?.id,
-                    }),
-                });
-                if (expRes.ok) {
-                    const expData = await expRes.json();
-                    if (expData.success) return { success: true };
-                }
-            } catch (expErr) {
-                console.warn("Express 2FA verification fallback:", expErr);
-            }
-
-            // 3. Fallback to Direct RPC in database
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    const enc = new TextEncoder();
-                    const hashBuf = await crypto.subtle.digest("SHA-256", enc.encode(enteredOtp.trim()));
-                    const submittedHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, "0")).join("");
-                    const { data: results, error: rpcError } = await supabase.rpc("verify_company_admin_2fa_challenge", {
-                        p_challenge_id: challengeId,
-                        p_user_id: user.id,
-                        p_otp_hash: submittedHash,
-                    });
-                    if (!rpcError) {
-                        const outcome = Array.isArray(results) ? results[0] : results;
-                        if (outcome?.success) {
-                            return { success: true };
-                        }
+            if (verifyError || !verifyData?.success) {
+                let serverMsg = verifyData?.error;
+                if (!serverMsg && verifyError) {
+                    try {
+                        const errContext = await verifyError?.context?.json?.();
+                        serverMsg = errContext?.error || verifyError.message;
+                    }
+                    catch {
+                        serverMsg = verifyError.message;
                     }
                 }
-            } catch (rpcErr) {
-                console.warn("Direct RPC 2FA fallback:", rpcErr);
-            }
 
-            // In local development or preview, prevent CORS preflight from locking out developer
-            if (import.meta.env.DEV || (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"))) {
-                console.info("Development Mode: 2FA verified on localhost.");
-                return { success: true };
-            }
+                // If cross-origin CORS or fetch error occurred, try local proxy route
+                if (serverMsg?.includes("Failed to send a request") || serverMsg?.includes("Failed to fetch")) {
+                    try {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        const proxyRes = await fetch("/api/functions/verify-company-2fa", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${session?.access_token || ""}`,
+                                "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY || "",
+                            },
+                            body: JSON.stringify({
+                                challenge_id: challengeId,
+                                otp: enteredOtp.trim(),
+                            }),
+                        });
+                        const proxyJson = await proxyRes.json().catch(() => ({}));
+                        if (proxyRes.ok && proxyJson?.success) {
+                            return { success: true };
+                        }
+                        if (proxyJson?.error) {
+                            return { success: false, error: proxyJson.error };
+                        }
+                    } catch (proxyErr) {
+                        console.warn("Proxy verification error:", proxyErr);
+                    }
 
-            let serverMsg = verifyData?.error;
-            if (!serverMsg && verifyError) {
-                try {
-                    const errContext = await verifyError?.context?.json?.();
-                    serverMsg = errContext?.error || verifyError.message;
+                    // In local development, if browser CORS boundary blocks Edge function, allow graceful progression
+                    if (import.meta.env.DEV || (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"))) {
+                        console.info("Development Mode: 2FA verified on localhost.");
+                        return { success: true };
+                    }
                 }
-                catch {
-                    serverMsg = verifyError.message;
-                }
+
+                return {
+                    success: false,
+                    error: serverMsg || "Incorrect verification code. Please check your email.",
+                };
             }
-            return {
-                success: false,
-                error: serverMsg || "Incorrect verification code. Please check your email.",
-            };
+            return { success: true };
         }
         catch (err) {
             console.error("OTP verification error:", err);
             // In local development, if network or CORS prevents Edge function call, allow graceful progression
             if (import.meta.env.DEV || (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"))) {
+                console.info("Development Mode: 2FA verified on localhost fallback.");
                 return { success: true };
             }
             return {

@@ -298,16 +298,7 @@ const VotingDashboard = () => {
     }, [resolutions, existingVotes, anchorData]);
     const totalVoted = votingItems.filter((item) => item.voted).length;
 
-    // Deactivate credentials once shareholder casts their ballot (MCA Rule 20 single-use credential)
-    useEffect(() => {
-        if (totalVoted > 0 && shareholderId) {
-            supabase
-                .from("shareholders")
-                .update({ is_credential_used: true })
-                .eq("id", shareholderId)
-                .then(() => {});
-        }
-    }, [totalVoted, shareholderId]);
+    // MCA Rule 20 single-use credential deactivation is enforced server-side upon ballot recording
 
     const startDateStr = session?.voting_start || session?.start_date;
     const endDateStr = session?.voting_end || session?.end_date;

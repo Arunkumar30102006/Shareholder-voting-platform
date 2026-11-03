@@ -45,8 +45,6 @@ export const VotingManagementAPI = {
             event_type: schedulePayload.event_type || "AGM",
             voting_start: schedulePayload.voting_start,
             voting_end: schedulePayload.voting_end,
-            start_date: schedulePayload.voting_start,
-            end_date: schedulePayload.voting_end,
             meeting_date: schedulePayload.meeting_date || null,
             meeting_end_date: schedulePayload.meeting_end_date || null,
             notice_date: schedulePayload.notice_date || null,
